@@ -7,6 +7,7 @@ import Browse from './pages/Browse';
 import Upload from './pages/Upload';
 import Leaderboard from './pages/Leaderboard';
 import Profile from './pages/Profile';
+import StudyAI from './pages/StudyAI';
 import Login from './pages/Login';
 import ResourceDetail from './pages/ResourceDetail';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -32,6 +33,11 @@ function App() {
             <Route path="/profile" element={
               <ProtectedRoute>
                 <Profile />
+              </ProtectedRoute>
+            } />
+            <Route path="/ai" element={
+              <ProtectedRoute>
+                <StudyAI />
               </ProtectedRoute>
             } />
           </Routes>

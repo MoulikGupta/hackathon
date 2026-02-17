@@ -30,6 +30,7 @@ const Navbar = () => {
 
     const navLinks = [
         { name: 'RESOURCES', path: '/browse' },
+        { name: 'STUDY AI', path: '/ai' },
         { name: 'UPLOAD', path: '/upload' },
         { name: 'LEADERBOARD', path: '/leaderboard' },
         { name: 'DASHBOARD', path: '/profile' },
