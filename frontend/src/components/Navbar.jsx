@@ -23,10 +23,10 @@ const Navbar = () => {
     }, []);
 
     const navLinks = [
-        { name: 'SOLUTIONS', path: '/browse' },
-        { name: 'RESOURCES', path: '/upload' },
-        { name: 'PARTNERS', path: '/leaderboard' },
-        { name: 'COMPANY', path: '/profile' },
+        { name: 'RESOURCES', path: '/browse' },
+        { name: 'UPLOAD', path: '/upload' },
+        { name: 'LEADERBOARD', path: '/leaderboard' },
+        { name: 'DASHBOARD', path: '/profile' },
     ];
 
     const handleSignOut = async () => {
