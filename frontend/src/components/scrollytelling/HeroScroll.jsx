@@ -33,7 +33,7 @@ const HeroScroll = () => {
                     <ScrollSequence />
 
                     {/* Gradient Overlay to Hide Watermark (z-5) */}
-                    <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black via-black/80 to-transparent z-0 pointer-events-none" />
+
 
                     {/* Text Overlays (z-10) */}
                     <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
@@ -90,7 +90,7 @@ const HeroScroll = () => {
                     {/* Scroll Indicator Hint */}
                     <motion.div
                         style={{ opacity: useTransform(scrollYProgress, [0, 0.1], [1, 0]) }}
-                        className="absolute bottom-10 left-1/2 -translate-x-1/2 text-white/50 font-mono text-xs tracking-[0.2em]"
+                        className="absolute bottom-24 left-1/2 -translate-x-1/2 text-white/50 font-mono text-xs tracking-[0.2em] z-20"
                     >
                         SCROLL TO EXPLORE
                     </motion.div>

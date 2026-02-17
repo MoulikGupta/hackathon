@@ -1,8 +1,12 @@
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
-const sourceDir = 'frontend/books-zip';
-const targetDir = 'frontend/public/books';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const sourceDir = path.join(__dirname, 'books-zip');
+const targetDir = path.join(__dirname, 'public/books');
 
 if (!fs.existsSync(targetDir)) {
     fs.mkdirSync(targetDir, { recursive: true });

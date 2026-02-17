@@ -14,8 +14,8 @@ const Navbar = () => {
 
     useEffect(() => {
         const handleScroll = () => {
-            // Show navbar only after scrolling past the main hero view (e.g. 80% viewport)
-            setIsVisible(window.scrollY > window.innerHeight * 0.8);
+            // Show navbar only after scrolling past the "Built for Students" phase (approx 50% of 500vh hero)
+            setIsVisible(window.scrollY > window.innerHeight * 2.5);
         };
         handleScroll(); // Check on mount
         window.addEventListener('scroll', handleScroll);
