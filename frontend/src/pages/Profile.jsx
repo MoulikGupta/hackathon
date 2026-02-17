@@ -191,7 +191,7 @@ const Profile = () => {
                                 <div>
                                     <label className={labelClass}>Semester</label>
                                     <select value={profileForm.semester} onChange={(e) => setProfileForm(p => ({ ...p, semester: e.target.value }))} className={inputClass + ' appearance-none'}>
-                                        <option value="">Select</option>{['1', '2', '3', '4', '5', '6', '7', '8'].map(s => <option key={s} value={s}>Semester {s}</option>)}
+                                        <option value="" className="bg-zinc-900 text-white">Select</option>{['1', '2', '3', '4', '5', '6', '7', '8'].map(s => <option key={s} value={s} className="bg-zinc-900 text-white">Semester {s}</option>)}
                                     </select>
                                 </div>
                                 <div className="md:col-span-2"><label className={labelClass}>Bio</label><textarea value={profileForm.bio} onChange={(e) => setProfileForm(p => ({ ...p, bio: e.target.value }))} rows={2} className={inputClass + ' resize-none'} /></div>
