@@ -80,14 +80,20 @@ const StudyAI = () => {
         }
     };
 
+    const [confirmClear, setConfirmClear] = useState(false);
+
     const clearHistory = () => {
-        if (confirm("Are you sure you want to clear your chat history?")) {
+        if (confirmClear) {
             setMessages([{
                 id: Date.now(),
                 role: 'model',
                 text: "Chat history cleared. How can I help you now?"
             }]);
             localStorage.removeItem('study_ai_history');
+            setConfirmClear(false);
+        } else {
+            setConfirmClear(true);
+            setTimeout(() => setConfirmClear(false), 3000); // Reset after 3s
         }
     };
 
@@ -96,8 +102,14 @@ const StudyAI = () => {
             title="Study AI"
             subtitle="Your Personal Tutor"
             action={
-                <Button variant="outline" onClick={clearHistory} className="h-9 px-3 text-xs border-white/10 hover:bg-white/5 text-zinc-400 hover:text-red-400">
-                    <Trash2 className="w-3.5 h-3.5 mr-2" /> Clear Chat
+                <Button
+                    variant="outline"
+                    onClick={clearHistory}
+                    className={`h-9 px-3 text-xs border-white/10 hover:bg-white/5 transition-colors ${confirmClear ? 'text-red-400 border-red-500/50 bg-red-500/10' : 'text-zinc-400 hover:text-red-400'
+                        }`}
+                >
+                    <Trash2 className="w-3.5 h-3.5 mr-2" />
+                    {confirmClear ? "Confirm Clear?" : "Clear Chat"}
                 </Button>
             }
         >
@@ -121,8 +133,8 @@ const StudyAI = () => {
 
                                 {/* Bubble */}
                                 <div className={`max-w-[80%] rounded-2xl px-5 py-3 text-sm leading-relaxed ${msg.role === 'user'
-                                        ? 'bg-primary/10 text-white border border-primary/20 rounded-tr-sm'
-                                        : 'bg-white/5 text-zinc-300 border border-white/10 rounded-tl-sm'
+                                    ? 'bg-primary/10 text-white border border-primary/20 rounded-tr-sm'
+                                    : 'bg-white/5 text-zinc-300 border border-white/10 rounded-tl-sm'
                                     }`}>
                                     <div className="whitespace-pre-wrap font-sans">
                                         {msg.text}
