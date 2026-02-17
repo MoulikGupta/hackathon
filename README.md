@@ -1,4 +1,8 @@
-Team Colonials
-Moulik Gupta
-Daksh Jain
-Vasu Sharma
+## Team
+
+**Team Name:** Team Colonials  
+
+**Members:**
+- Moulik Gupta
+- Daksh Jain
+- Vasu Sharma
