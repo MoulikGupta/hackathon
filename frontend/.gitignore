@@ -7,10 +7,37 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
+# Dependency directories
+node_modules/
+jspm_packages/
+web_modules/
+
+# Build output
 dist
 dist-ssr
+build
+.next
+.nuxt
+.cache
 *.local
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint/stylelint cache
+.eslintcache
+.stylelintcache
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
 
 # Editor directories and files
 .vscode/*
@@ -22,3 +49,25 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage
+*.lcov
+
+# nyc test coverage
+.nyc_output
