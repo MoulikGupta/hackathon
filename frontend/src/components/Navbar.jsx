@@ -70,14 +70,10 @@ const Navbar = () => {
                 >
                     {/* Logo */}
                     <NavLink to="/" className="flex items-center gap-2.5 group">
-                        <div className="flex items-center gap-1">
-                            <div className="w-7 h-7 bg-primary flex items-center justify-center">
-                                <span className="text-black font-bold text-sm font-mono">S</span>
-                            </div>
-                            <div className="w-7 h-7 border border-white/20 flex items-center justify-center group-hover:border-primary/50 transition-colors">
-                                <span className="text-white font-bold text-sm font-mono">S</span>
-                            </div>
-                        </div>
+                        <span className="font-bold text-lg font-mono">
+                            <span className="text-primary">Notes</span>
+                            <span className="text-white"> Sphere</span>
+                        </span>
                     </NavLink>
 
                     {/* Desktop Nav Links */}

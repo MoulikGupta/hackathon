@@ -200,7 +200,7 @@ const FeatureScroll = () => {
                 >
                     <p className="text-sm font-mono text-white/50 leading-relaxed tracking-wide uppercase">
                         <span className="inline-block w-2 h-2 bg-primary rounded-none mr-2 align-middle" />
-                        StudySync unifies essential academic tools into a single platform.
+                        Notes Sphere unifies essential academic tools into a single platform.
                         Reduce complexity, find resources fast, and collaborate with
                         your campus community.
                     </p>
