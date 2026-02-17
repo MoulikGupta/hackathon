@@ -84,9 +84,6 @@ const Login = () => {
                                 <span className="text-white font-bold text-sm font-mono">S</span>
                             </div>
                         </div>
-                        <span className="font-mono text-sm tracking-wider text-white/80">
-                            INSPIRE
-                        </span>
                     </div>
 
                     {/* Heading */}

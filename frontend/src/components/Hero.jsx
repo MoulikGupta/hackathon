@@ -11,7 +11,7 @@ const Hero = () => {
                     transition={{ duration: 1, delay: 0.5, ease: "easeOut" }}
                 >
                     <span className="inline-block py-1 px-3 rounded-full bg-zinc-800/50 border border-zinc-700 text-xs tracking-wider text-zinc-400 mb-6 backdrop-blur-sm">
-                        WELCOME TO INSPIRE
+                        WELCOME
                     </span>
                 </motion.div>
 

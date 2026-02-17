@@ -78,9 +78,6 @@ const Navbar = () => {
                                 <span className="text-white font-bold text-sm font-mono">S</span>
                             </div>
                         </div>
-                        <span className="font-mono text-sm tracking-wider text-white/80 hidden sm:inline">
-                            INSPIRE
-                        </span>
                     </NavLink>
 
                     {/* Desktop Nav Links */}

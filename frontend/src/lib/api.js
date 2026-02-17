@@ -27,6 +27,7 @@ export async function upsertProfile(profileData) {
 // ─── Resources API ──────────────────────────────────────────────────
 
 export async function uploadResource({ file, title, subject, semester, resource_type, year, description, is_public, college, userId }) {
+
     // Ensure the profile row exists (FK: resources.uploader_id → profiles.id)
     const { data: existingProfile } = await supabase
         .from('profiles')
