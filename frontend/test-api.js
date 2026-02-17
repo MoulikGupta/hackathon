@@ -9,7 +9,7 @@ console.log("Testing API Key:", API_KEY ? "Present" : "Missing");
 async function test() {
     try {
         const genAI = new GoogleGenerativeAI(API_KEY);
-        const modelName = "gemini-2.5-flash"; // User requested model
+        const modelName = "gemini-2.5-flash-lite"; // User requested model
         console.log(`Testing model: ${modelName}`);
         
         const model = genAI.getGenerativeModel({ model: modelName });
