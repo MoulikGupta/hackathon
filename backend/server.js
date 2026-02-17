@@ -15,7 +15,7 @@ app.use(express.json());
 
 // Health check route
 app.get('/', (req, res) => {
-  res.json({ status: 'ok', message: 'KZero Inspire API is running' });
+  res.json({ status: 'ok', message: 'StudySync Inspire API is running' });
 });
 
 // API Routes
