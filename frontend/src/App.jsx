@@ -7,6 +7,7 @@ import Upload from './pages/Upload';
 import Leaderboard from './pages/Leaderboard';
 import Profile from './pages/Profile';
 import Login from './pages/Login';
+import ResourceDetail from './pages/ResourceDetail';
 import LoadingScreen from './components/LoadingScreen';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -27,6 +28,7 @@ function App() {
                 <Route path="/browse" element={<Browse />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/leaderboard" element={<Leaderboard />} />
+                <Route path="/resource/:id" element={<ResourceDetail />} />
                 <Route path="/upload" element={
                   <ProtectedRoute>
                     <Upload />
