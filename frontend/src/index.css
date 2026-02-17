@@ -11,6 +11,12 @@
     box-sizing: border-box;
   }
 
+  :root {
+    /* Font Mappings */
+    --font-geist-mono: "JetBrains Mono", monospace;
+    --font-neue-machina: "Space Grotesk", sans-serif;
+  }
+
   body {
     @apply bg-black text-white antialiased font-sans overflow-x-hidden;
     -webkit-font-smoothing: antialiased;

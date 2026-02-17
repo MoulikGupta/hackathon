@@ -14,13 +14,14 @@ const Button = forwardRef(({
         "transition-all duration-300 ease-out",
         "disabled:opacity-40 disabled:pointer-events-none",
         "active:scale-[0.97]",
+        "rounded-none", // Enforce 0px radius
     ].join(' ');
 
     const variantStyles = {
-        primary: "bg-primary text-black hover:bg-[#ff7a5c] border border-primary",
+        primary: "bg-brand-primary text-white border border-brand-primary hover:bg-white hover:text-brand-primary",
         outline: "bg-transparent text-white border border-white/30 hover:border-white hover:bg-white/5",
         ghost: "bg-transparent text-secondary hover:text-white hover:bg-white/5 border border-transparent",
-        glow: "bg-transparent text-white border border-primary/50 shadow-[0_0_20px_rgba(248,92,58,0.2)] hover:shadow-[0_0_30px_rgba(248,92,58,0.4)] hover:border-primary",
+        glow: "bg-transparent text-white border border-brand-primary/50 shadow-[0_0_20px_rgba(248,92,58,0.2)] hover:shadow-[0_0_30px_rgba(248,92,58,0.4)] hover:border-brand-primary",
     };
 
     const sizeStyles = {

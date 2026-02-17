@@ -10,8 +10,12 @@ export default {
         background: "#000000",
         surface: "#0A0A0F",
         primary: {
-          DEFAULT: "#F85C3A",
+          DEFAULT: "#F85C3A", // Updated to new Orange
           foreground: "#FFFFFF",
+        },
+        brand: {
+            primary: '#F85C3A',
+            black: '#000000',
         },
         secondary: "#888888",
         accent: "#F2F2F2",
@@ -19,8 +23,8 @@ export default {
       },
       fontFamily: {
         sans: ['"Inter"', 'system-ui', 'sans-serif'],
-        mono: ['"JetBrains Mono"', '"Geist Mono"', 'monospace'],
-        display: ['"Space Grotesk"', 'system-ui', 'sans-serif'],
+        mono: ['var(--font-geist-mono)', '"JetBrains Mono"', 'monospace'], // Added var
+        display: ['var(--font-neue-machina)', '"Space Grotesk"', 'system-ui', 'sans-serif'], // Added var
       },
       animation: {
         'fade-in-up': 'fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',

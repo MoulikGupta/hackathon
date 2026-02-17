@@ -6,14 +6,18 @@ import { cn } from '../lib/utils';
 import { useAuth } from '../context/AuthContext';
 
 const Navbar = () => {
-    const [isScrolled, setIsScrolled] = useState(false);
+    const [isVisible, setIsVisible] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const location = useLocation();
     const navigate = useNavigate();
     const { user, signOut } = useAuth();
 
     useEffect(() => {
-        const handleScroll = () => setIsScrolled(window.scrollY > 50);
+        const handleScroll = () => {
+            // Show navbar only after scrolling past the main hero view (e.g. 80% viewport)
+            setIsVisible(window.scrollY > window.innerHeight * 0.8);
+        };
+        handleScroll(); // Check on mount
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
@@ -48,16 +52,14 @@ const Navbar = () => {
             {/* Floating Pill Navbar — inspired by KZero */}
             <motion.nav
                 initial={{ y: -100, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                animate={{ y: isVisible ? 0 : -100, opacity: isVisible ? 1 : 0 }}
+                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                 className="fixed top-0 left-0 right-0 z-50 flex justify-center px-4 pt-4"
             >
                 <div
                     className={cn(
                         "flex items-center justify-between w-full max-w-6xl px-6 py-3 transition-all duration-500 ease-out",
-                        isScrolled
-                            ? "bg-black/60 backdrop-blur-xl border border-white/10 rounded-full shadow-[0_0_60px_rgba(0,0,0,0.5)]"
-                            : "bg-transparent border border-transparent"
+                        "bg-black/80 backdrop-blur-xl border border-white/10 rounded-full shadow-[0_0_60px_rgba(0,0,0,0.5)]"
                     )}
                 >
                     {/* Logo */}
