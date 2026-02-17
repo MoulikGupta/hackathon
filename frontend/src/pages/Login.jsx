@@ -76,14 +76,10 @@ const Login = () => {
 
                     {/* Logo */}
                     <div className="flex items-center justify-center gap-2 mb-8">
-                        <div className="flex items-center gap-1">
-                            <div className="w-8 h-8 bg-primary flex items-center justify-center">
-                                <span className="text-black font-bold text-sm font-mono">S</span>
-                            </div>
-                            <div className="w-8 h-8 border border-white/20 flex items-center justify-center">
-                                <span className="text-white font-bold text-sm font-mono">S</span>
-                            </div>
-                        </div>
+                        <span className="font-bold text-lg font-mono">
+                            <span className="text-primary">Notes</span>
+                            <span className="text-white"> Sphere</span>
+                        </span>
                     </div>
 
                     {/* Heading */}
@@ -118,7 +114,7 @@ const Login = () => {
 
                     {/* Info text */}
                     <p className="text-center text-[11px] text-white/30 leading-relaxed">
-                        By continuing, you agree to StudySync Inspire's Terms of Service and Privacy Policy.
+                        By continuing, you agree to Notes Sphere's Terms of Service and Privacy Policy.
                     </p>
 
                     {/* Bottom corner glow */}

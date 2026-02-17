@@ -16,130 +16,109 @@ const upload = multer({
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             'application/vnd.ms-powerpoint',
             'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-            'image/jpeg', 'image/png', 'image/webp',
-            'application/zip',
-            'text/plain',
+            'image/jpeg',
+            'image/png',
+            'image/webp',
         ];
-        if (allowed.includes(file.mimetype)) {
-            cb(null, true);
-        } else {
-            cb(new Error('File type not supported'), false);
-        }
-    }
+        if (allowed.includes(file.mimetype)) cb(null, true);
+        else cb(new Error('Unsupported file type'), false);
+    },
 });
 
-// ─── POST /api/resources — Upload a resource ───────────────────────
+// ─── POST /api/resources — Upload resource ─────────────────────────
 router.post('/', verifySupabaseToken, upload.single('file'), async (req, res) => {
     try {
-        const file = req.file;
-        if (!file) return res.status(400).json({ error: 'No file uploaded' });
+        const userId = req.user.id;
+        const { title, subject, semester, resource_type, year, description, is_public, college } = req.body;
 
-        const { title, subject, department, semester, type, description, tags, year_batch, privacy, college } = req.body;
-        if (!title || !subject) return res.status(400).json({ error: 'Title and subject are required' });
-
-        // Generate unique file path
-        const ext = file.originalname.split('.').pop();
-        const filePath = `${req.user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-
-        // Upload to Supabase Storage
-        await uploadFile(file.buffer, filePath, file.mimetype);
-        const fileUrl = getPublicUrl(filePath);
-
-        // Parse tags
-        let parsedTags = [];
-        if (tags) {
-            try {
-                parsedTags = JSON.parse(tags);
-            } catch {
-                parsedTags = tags.split(',').map(t => t.trim()).filter(Boolean);
-            }
+        if (!req.file || !title || !subject) {
+            return res.status(400).json({ error: 'File, title, and subject are required' });
         }
 
-        // Insert into database
+        const resourceId = require('crypto').randomUUID();
+        const filePath = `${userId}/${resourceId}/${req.file.originalname}`;
+
+        // Upload to Supabase Storage
+        const { error: uploadError } = await uploadFile(req.file.buffer, filePath, req.file.mimetype);
+        if (uploadError) {
+            return res.status(500).json({ error: 'Storage upload failed', details: uploadError.message });
+        }
+
+        // Insert into resources table (correct columns only)
         const { data, error } = await supabase
             .from('resources')
             .insert({
-                user_id: req.user.id,
+                id: resourceId,
+                uploader_id: userId,
                 title,
                 subject,
-                department: department || 'CSE',
-                semester: semester || '1st Sem',
-                type: type || 'Notes',
+                semester: semester || null,
+                resource_type: resource_type || null,
+                year: year ? parseInt(year) : null,
                 description: description || '',
-                tags: parsedTags,
-                year_batch: year_batch || '',
-                privacy: privacy || 'public',
-                college: college || '',
                 file_path: filePath,
-                file_url: fileUrl,
-                file_name: file.originalname,
-                file_size: file.size,
+                college: college || '',
+                is_public: is_public === 'true' || is_public === true,
             })
             .select()
             .single();
 
-        if (error) throw error;
+        if (error) {
+            // Cleanup uploaded file
+            await deleteFile(filePath);
+            return res.status(500).json({ error: 'Database insert failed', details: error.message });
+        }
 
-        res.status(201).json({ message: 'Resource uploaded successfully', resource: data });
+        res.status(201).json({ success: true, resource: data });
     } catch (err) {
-        console.error('Upload error:', err.message);
-        res.status(500).json({ error: err.message || 'Upload failed' });
+        console.error('Upload error:', err);
+        res.status(500).json({ error: err.message });
     }
 });
 
-// ─── GET /api/resources — List / Search / Filter ────────────────────
+// ─── GET /api/resources — List resources ────────────────────────────
 router.get('/', async (req, res) => {
     try {
-        const {
-            search, department, semester, type, privacy,
-            sort, user_id, page = 1, limit = 20
-        } = req.query;
+        const { semester, resource_type, is_public, search, sort, page = 1, limit = 20 } = req.query;
 
-        let query = supabase.from('resources').select('*');
+        let query = supabase.from('resources').select('*', { count: 'exact' });
 
-        // Filters
-        if (department && department !== 'All') query = query.eq('department', department);
         if (semester && semester !== 'All') query = query.eq('semester', semester);
-        if (type && type !== 'All') query = query.eq('type', type);
-        if (privacy && privacy !== 'All') query = query.eq('privacy', privacy);
-        if (user_id) query = query.eq('user_id', user_id);
+        if (resource_type && resource_type !== 'All') query = query.eq('resource_type', resource_type);
+        if (is_public !== undefined) query = query.eq('is_public', is_public === 'true');
 
-        // Search (title, subject, or tags)
         if (search) {
             query = query.or(`title.ilike.%${search}%,subject.ilike.%${search}%`);
         }
 
-        // Sorting
-        switch (sort) {
-            case 'rating':
-                query = query.order('avg_rating', { ascending: false });
-                break;
-            case 'popular':
-                query = query.order('downloads', { ascending: false });
-                break;
-            case 'oldest':
-                query = query.order('created_at', { ascending: true });
-                break;
-            default: // 'latest'
-                query = query.order('created_at', { ascending: false });
+        if (sort === 'oldest') {
+            query = query.order('created_at', { ascending: true });
+        } else {
+            query = query.order('created_at', { ascending: false });
         }
 
-        // Pagination
         const from = (parseInt(page) - 1) * parseInt(limit);
         const to = from + parseInt(limit) - 1;
         query = query.range(from, to);
 
         const { data, error, count } = await query;
-        if (error) throw error;
+        if (error) return res.status(500).json({ error: error.message });
 
-        res.json({ resources: data || [], page: parseInt(page), limit: parseInt(limit) });
+        res.json({
+            resources: data,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total: count,
+            },
+        });
     } catch (err) {
-        console.error('Fetch resources error:', err.message);
-        res.status(500).json({ error: 'Failed to fetch resources' });
+        console.error('Fetch resources error:', err);
+        res.status(500).json({ error: err.message });
     }
 });
 
-// ─── GET /api/resources/:id — Single resource detail ────────────────
+// ─── GET /api/resources/:id — Get single resource ──────────────────
 router.get('/:id', async (req, res) => {
     try {
         const { data, error } = await supabase
@@ -148,108 +127,57 @@ router.get('/:id', async (req, res) => {
             .eq('id', req.params.id)
             .single();
 
-        if (error) throw error;
-        if (!data) return res.status(404).json({ error: 'Resource not found' });
-
-        res.json({ resource: data });
-    } catch (err) {
-        console.error('Fetch resource error:', err.message);
-        res.status(500).json({ error: 'Failed to fetch resource' });
-    }
-});
-
-// ─── PUT /api/resources/:id — Edit resource (owner only) ────────────
-router.put('/:id', verifySupabaseToken, async (req, res) => {
-    try {
-        // Check ownership
-        const { data: existing, error: fetchErr } = await supabase
-            .from('resources')
-            .select('user_id')
-            .eq('id', req.params.id)
-            .single();
-
-        if (fetchErr || !existing) return res.status(404).json({ error: 'Resource not found' });
-        if (existing.user_id !== req.user.id) return res.status(403).json({ error: 'Not authorized' });
-
-        const { title, subject, department, semester, type, description, tags, year_batch, privacy } = req.body;
-
-        let parsedTags;
-        if (tags) {
-            try { parsedTags = JSON.parse(tags); } catch { parsedTags = tags.split(',').map(t => t.trim()).filter(Boolean); }
+        if (error || !data) {
+            return res.status(404).json({ error: 'Resource not found' });
         }
 
-        const updates = {};
-        if (title) updates.title = title;
-        if (subject) updates.subject = subject;
-        if (department) updates.department = department;
-        if (semester) updates.semester = semester;
-        if (type) updates.type = type;
-        if (description !== undefined) updates.description = description;
-        if (parsedTags) updates.tags = parsedTags;
-        if (year_batch) updates.year_batch = year_batch;
-        if (privacy) updates.privacy = privacy;
+        // Get public URL for download
+        const downloadUrl = getPublicUrl(data.file_path);
 
-        const { data, error } = await supabase
-            .from('resources')
-            .update(updates)
-            .eq('id', req.params.id)
-            .select()
-            .single();
-
-        if (error) throw error;
-
-        res.json({ message: 'Resource updated', resource: data });
+        res.json({ resource: data, downloadUrl });
     } catch (err) {
-        console.error('Update error:', err.message);
-        res.status(500).json({ error: 'Failed to update resource' });
+        console.error('Fetch resource error:', err);
+        res.status(500).json({ error: err.message });
     }
 });
 
-// ─── DELETE /api/resources/:id — Delete resource (owner only) ───────
+// ─── DELETE /api/resources/:id — Delete resource ────────────────────
 router.delete('/:id', verifySupabaseToken, async (req, res) => {
     try {
-        const { data: existing, error: fetchErr } = await supabase
-            .from('resources')
-            .select('user_id, file_path')
-            .eq('id', req.params.id)
-            .single();
+        const userId = req.user.id;
 
-        if (fetchErr || !existing) return res.status(404).json({ error: 'Resource not found' });
-        if (existing.user_id !== req.user.id) return res.status(403).json({ error: 'Not authorized' });
-
-        // Delete file from storage
-        try { await deleteFile(existing.file_path); } catch (e) { console.warn('File delete warning:', e.message); }
-
-        // Delete from database
-        const { error } = await supabase.from('resources').delete().eq('id', req.params.id);
-        if (error) throw error;
-
-        res.json({ message: 'Resource deleted' });
-    } catch (err) {
-        console.error('Delete error:', err.message);
-        res.status(500).json({ error: 'Failed to delete resource' });
-    }
-});
-
-// ─── POST /api/resources/:id/download — Increment download count ────
-router.post('/:id/download', async (req, res) => {
-    try {
+        // Verify ownership
         const { data: resource, error: fetchErr } = await supabase
             .from('resources')
-            .select('downloads, file_url')
+            .select('uploader_id, file_path')
             .eq('id', req.params.id)
             .single();
 
-        if (fetchErr || !resource) return res.status(404).json({ error: 'Resource not found' });
+        if (fetchErr || !resource) {
+            return res.status(404).json({ error: 'Resource not found' });
+        }
 
-        await supabase
+        if (resource.uploader_id !== userId) {
+            return res.status(403).json({ error: 'Not authorized to delete this resource' });
+        }
+
+        // Delete from storage
+        if (resource.file_path) {
+            await deleteFile(resource.file_path);
+        }
+
+        // Delete from database
+        const { error } = await supabase
             .from('resources')
-            .update({ downloads: (resource.downloads || 0) + 1 })
+            .delete()
             .eq('id', req.params.id);
 
-        res.json({ file_url: resource.file_url });
+        if (error) return res.status(500).json({ error: error.message });
+
+        res.json({ success: true, message: 'Resource deleted' });
     } catch (err) {
-        res.status(500).json({ error: 'Download failed' });
+        console.error('Delete error:', err);
+        res.status(500).json({ error: err.message });
     }
 });
 

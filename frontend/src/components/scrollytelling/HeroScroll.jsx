@@ -18,7 +18,7 @@ const HeroScroll = () => {
     const text3Opacity = useTransform(scrollYProgress, [0.5, 0.55, 0.65, 0.7], [0, 1, 1, 0]);
     const text3Y = useTransform(scrollYProgress, [0.5, 0.55, 0.7], [50, 0, -50]);
 
-    // Phase 4: 75% - 100% (Exploded Finale) -> "StudySync"
+    // Phase 4: 75% - 100% (Exploded Finale) -> "Notes Sphere"
     const text4Opacity = useTransform(scrollYProgress, [0.75, 0.8, 1], [0, 1, 1]);
     const text4Scale = useTransform(scrollYProgress, [0.75, 1], [0.9, 1]);
 
@@ -74,7 +74,7 @@ const HeroScroll = () => {
                             className="absolute flex flex-col items-center justify-center gap-8 pointer-events-auto"
                         >
                             <h1 className="font-display text-6xl md:text-8xl lg:text-9xl font-bold text-white uppercase tracking-tight">
-                                StudySync
+                                Notes Sphere
                             </h1>
 
                             <Button
