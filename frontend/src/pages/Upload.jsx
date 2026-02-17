@@ -1,223 +1,338 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload as UploadIcon, X, FileText, CheckCircle, AlertCircle, Lock, Globe, Tag } from 'lucide-react';
+import { useDropzone } from 'react-dropzone';
+import { Upload as UploadIcon, FileText, CheckCircle, X, AlertCircle, BookOpen, Layers, Type, Calendar, Globe, Lock, Info } from 'lucide-react';
 import Button from '../components/ui/Button';
-import { uploadResource, addTagsToResource } from '../lib/api';
+import PageLayout from '../components/PageLayout';
+import { uploadResource } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const Upload = () => {
-    const { user, profile } = useAuth();
-    const [dragActive, setDragActive] = useState(false);
+    const { user } = useAuth();
+    const navigate = useNavigate();
     const [file, setFile] = useState(null);
     const [uploading, setUploading] = useState(false);
+    const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
-    const [error, setError] = useState('');
 
     const [formData, setFormData] = useState({
         title: '',
         subject: '',
-        semester: '1',
-        resource_type: 'Notes',
-        year: new Date().getFullYear().toString(),
+        semester: '',
+        resource_type: '',
+        year: new Date().getFullYear(),
         description: '',
-        tags: '',
         is_public: true,
+        college: '',
+        tags: []
     });
 
-    const handleDrag = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (e.type === "dragenter" || e.type === "dragover") setDragActive(true);
-        else if (e.type === "dragleave") setDragActive(false);
-    };
+    const onDrop = useCallback(acceptedFiles => {
+        setFile(acceptedFiles[0]);
+        setError(null);
+    }, []);
 
-    const handleDrop = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setDragActive(false);
-        if (e.dataTransfer.files?.[0]) setFile(e.dataTransfer.files[0]);
-    };
-
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
-    };
+    const { getRootProps, getInputProps, isDragActive } = useDropzone({
+        onDrop,
+        accept: {
+            'application/pdf': ['.pdf'],
+            'image/*': ['.png', '.jpg', '.jpeg']
+        },
+        maxSize: 10485760,
+        multiple: false
+    });
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!file || !formData.title || !formData.subject) return;
+        setError(null);
+
+        if (!file) {
+            setError("Please select a file to upload.");
+            return;
+        }
+        if (!formData.title || !formData.subject || !formData.semester || !formData.resource_type) {
+            setError("Please fill in all required fields.");
+            return;
+        }
 
         setUploading(true);
-        setError('');
-
         try {
-            const resource = await uploadResource({
-                file,
-                title: formData.title,
-                subject: formData.subject,
-                semester: formData.semester,
-                resource_type: formData.resource_type,
-                year: formData.year,
-                description: formData.description,
-                is_public: formData.is_public,
-                college: profile?.college || '',
-                userId: user.id,
-            });
-
-            // Handle tags
-            const tagsArray = formData.tags.split(',').map(t => t.trim()).filter(Boolean);
-            if (tagsArray.length > 0 && resource?.id) {
-                await addTagsToResource(resource.id, tagsArray);
-            }
-
+            await uploadResource(file, { ...formData, user_id: user.id });
             setSuccess(true);
-
-            setTimeout(() => {
-                setSuccess(false);
-                setFile(null);
-                setFormData({
-                    title: '', subject: '', semester: '1',
-                    resource_type: 'Notes', description: '', tags: '',
-                    year: new Date().getFullYear().toString(), is_public: true,
-                });
-            }, 3000);
+            setTimeout(() => navigate('/profile'), 2000);
         } catch (err) {
-            setError(err.message || 'Upload failed');
+            console.error('Upload failed:', err);
+            setError(err.message || "Upload failed. Please try again.");
         } finally {
             setUploading(false);
         }
     };
 
-    const inputClass = "w-full bg-[#121217] border border-white/10 rounded-sm px-4 py-2.5 text-sm text-white focus:border-primary/50 focus:outline-none transition-colors placeholder:text-zinc-700";
-    const labelClass = "text-xs font-mono text-secondary uppercase tracking-wider";
+    const inputBase = "w-full bg-zinc-900/80 border border-white/10 rounded-lg px-4 py-3 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/30 transition-all duration-200";
+    const labelBase = "text-[11px] font-mono text-zinc-400 uppercase tracking-widest mb-2 flex items-center gap-1.5";
 
-    return (
-        <div className="min-h-screen pt-24 pb-12 px-6 max-w-5xl mx-auto">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-                <h1 className="text-3xl md:text-4xl font-display font-medium text-white mb-2">Upload Resource</h1>
-                <p className="text-secondary text-sm">Contribute to the community and earn Karma points.</p>
-            </motion.div>
-
-            {error && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 flex-shrink-0" /> {error}
-                </motion.div>
-            )}
-
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-                {/* Left Col: Upload Zone + Guidelines */}
-                <div className="lg:col-span-2 space-y-6">
-                    <div
-                        className={`relative h-56 border-2 border-dashed rounded-lg transition-all duration-300 flex flex-col items-center justify-center p-6 text-center ${dragActive ? 'border-primary bg-primary/10' : 'border-white/10 bg-white/5 hover:border-white/20'}`}
-                        onDragEnter={handleDrag} onDragLeave={handleDrag} onDragOver={handleDrag} onDrop={handleDrop}
+    /* ── Success State ── */
+    if (success) {
+        return (
+            <PageLayout title="Upload Resource" subtitle="Contribute">
+                <div className="flex flex-col items-center justify-center min-h-[50vh] text-center">
+                    <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+                        className="w-24 h-24 bg-green-500/10 rounded-full flex items-center justify-center mb-8 border border-green-500/20"
                     >
-                        <input type="file" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={(e) => setFile(e.target.files[0])} />
+                        <CheckCircle className="w-12 h-12 text-green-400" />
+                    </motion.div>
+                    <h2 className="text-3xl font-display font-medium text-white mb-3">Upload Successful!</h2>
+                    <p className="text-zinc-500 text-sm">Redirecting to your profile…</p>
+                </div>
+            </PageLayout>
+        );
+    }
+
+    /* ── Main Upload Page ── */
+    return (
+        <PageLayout title="Upload Resource" subtitle="Contribute to Library">
+            <form onSubmit={handleSubmit} className="max-w-3xl mx-auto space-y-8">
+
+                {/* ─── Upload Zone ─── */}
+                <motion.div
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.05 }}
+                >
+                    <div
+                        {...getRootProps()}
+                        className={`
+                            relative rounded-2xl border-2 border-dashed p-10 md:p-14
+                            flex flex-col items-center justify-center text-center
+                            cursor-pointer transition-all duration-300
+                            ${isDragActive
+                                ? 'border-primary bg-primary/[0.06] shadow-[0_0_40px_rgba(248,92,58,0.12)]'
+                                : file
+                                    ? 'border-green-500/40 bg-green-500/[0.04]'
+                                    : 'border-white/10 bg-zinc-900/50 hover:border-white/20 hover:bg-zinc-900/70'
+                            }
+                        `}
+                    >
+                        <input {...getInputProps()} />
+
                         <AnimatePresence mode="wait">
                             {file ? (
-                                <motion.div key="file-preview" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} className="flex flex-col items-center gap-3">
-                                    <div className="w-14 h-14 bg-primary/20 rounded-lg flex items-center justify-center text-primary"><FileText className="w-7 h-7" /></div>
-                                    <div className="text-center">
-                                        <p className="text-white font-medium text-sm truncate max-w-[200px]">{file.name}</p>
-                                        <p className="text-xs text-secondary">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                                <motion.div
+                                    key="file-preview"
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.9 }}
+                                    className="flex flex-col items-center"
+                                >
+                                    <div className="w-16 h-16 rounded-2xl bg-green-500/10 border border-green-500/20 flex items-center justify-center mb-4">
+                                        <FileText className="w-8 h-8 text-green-400" />
                                     </div>
-                                    <button onClick={(e) => { e.preventDefault(); setFile(null); }} className="mt-1 text-xs text-red-400 hover:text-red-300 flex items-center gap-1 z-10 relative"><X className="w-3 h-3" /> Remove</button>
+                                    <p className="text-base font-medium text-white mb-1 break-all max-w-xs">{file.name}</p>
+                                    <p className="text-xs text-zinc-500 font-mono">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                                    <button
+                                        type="button"
+                                        onClick={(e) => { e.stopPropagation(); setFile(null); }}
+                                        className="mt-5 text-xs text-red-400 hover:text-red-300 flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-500/20 hover:border-red-500/40 bg-red-500/5 transition-all"
+                                    >
+                                        <X className="w-3 h-3" /> Remove file
+                                    </button>
                                 </motion.div>
                             ) : (
-                                <motion.div key="upload-prompt" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center gap-3 pointer-events-none">
-                                    <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center"><UploadIcon className="w-6 h-6 text-secondary" /></div>
-                                    <div><p className="text-white font-medium text-sm">Drag & drop your file</p><p className="text-xs text-secondary mt-1">PDF, DOCX, PPT, Images (Max 50MB)</p></div>
+                                <motion.div
+                                    key="upload-prompt"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="flex flex-col items-center"
+                                >
+                                    <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-5 transition-all duration-300 ${isDragActive ? 'bg-primary/20 border border-primary/30' : 'bg-white/5 border border-white/10'}`}>
+                                        <UploadIcon className={`w-7 h-7 transition-colors ${isDragActive ? 'text-primary' : 'text-zinc-500'}`} />
+                                    </div>
+                                    <p className="text-base text-white font-medium mb-1">
+                                        {isDragActive ? 'Drop your file here!' : 'Drag & drop your file here'}
+                                    </p>
+                                    <p className="text-sm text-zinc-500">
+                                        or <span className="text-primary hover:underline">browse</span> to choose
+                                    </p>
+                                    <p className="text-[11px] text-zinc-600 font-mono mt-4 tracking-wide">
+                                        PDF, JPG, PNG — Max 10 MB
+                                    </p>
                                 </motion.div>
                             )}
                         </AnimatePresence>
                     </div>
+                </motion.div>
+
+                {/* ─── Error Message ─── */}
+                <AnimatePresence>
+                    {error && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -8, height: 0 }}
+                            animate={{ opacity: 1, y: 0, height: 'auto' }}
+                            exit={{ opacity: 0, y: -8, height: 0 }}
+                            className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center gap-3"
+                        >
+                            <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />
+                            <p className="text-sm text-red-300">{error}</p>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* ─── Form Fields ─── */}
+                <motion.div
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="rounded-2xl border border-white/[0.06] bg-zinc-900/40 p-6 md:p-8 space-y-6"
+                >
+                    <h3 className="text-lg font-display font-medium text-white flex items-center gap-2">
+                        <Info className="w-4 h-4 text-primary" /> Resource Details
+                    </h3>
+
+                    {/* Title */}
+                    <div>
+                        <label className={labelBase}>Title *</label>
+                        <input
+                            type="text"
+                            placeholder="e.g. Data Structures Notes Unit 1"
+                            value={formData.title}
+                            onChange={e => setFormData({ ...formData, title: e.target.value })}
+                            className={inputBase}
+                        />
+                    </div>
+
+                    {/* Subject + Semester */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <div>
+                            <label className={labelBase}><BookOpen className="w-3 h-3" /> Subject *</label>
+                            <input
+                                type="text"
+                                placeholder="e.g. Operating Systems"
+                                value={formData.subject}
+                                onChange={e => setFormData({ ...formData, subject: e.target.value })}
+                                className={inputBase}
+                            />
+                        </div>
+                        <div>
+                            <label className={labelBase}><Layers className="w-3 h-3" /> Semester *</label>
+                            <select
+                                value={formData.semester}
+                                onChange={e => setFormData({ ...formData, semester: e.target.value })}
+                                className={`${inputBase} appearance-none cursor-pointer`}
+                            >
+                                <option value="" className="bg-zinc-900">Select Semester</option>
+                                {[1, 2, 3, 4, 5, 6, 7, 8].map(s => (
+                                    <option key={s} value={s} className="bg-zinc-900">Semester {s}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+
+                    {/* Type + Year */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <div>
+                            <label className={labelBase}><Type className="w-3 h-3" /> Type *</label>
+                            <select
+                                value={formData.resource_type}
+                                onChange={e => setFormData({ ...formData, resource_type: e.target.value })}
+                                className={`${inputBase} appearance-none cursor-pointer`}
+                            >
+                                <option value="" className="bg-zinc-900">Select Type</option>
+                                {['Notes', 'Question Paper', 'Solutions', 'Project Report', 'Study Material', 'Assignment', 'Lab Manual', 'Presentation'].map(t => (
+                                    <option key={t} value={t} className="bg-zinc-900">{t}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className={labelBase}><Calendar className="w-3 h-3" /> Year</label>
+                            <input
+                                type="number"
+                                value={formData.year}
+                                onChange={e => setFormData({ ...formData, year: e.target.value })}
+                                className={inputBase}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Description */}
+                    <div>
+                        <label className={labelBase}>Description</label>
+                        <textarea
+                            rows={3}
+                            placeholder="Add a brief description about this resource…"
+                            value={formData.description}
+                            onChange={e => setFormData({ ...formData, description: e.target.value })}
+                            className={`${inputBase} resize-none`}
+                        />
+                    </div>
+
+                    {/* College */}
+                    <div>
+                        <label className={labelBase}>College</label>
+                        <input
+                            type="text"
+                            placeholder="Optional — e.g. MIT Manipal"
+                            value={formData.college}
+                            onChange={e => setFormData({ ...formData, college: e.target.value })}
+                            className={inputBase}
+                        />
+                    </div>
 
                     {/* Visibility Toggle */}
-                    <div className="flex gap-3">
+                    <div className="flex gap-3 pt-1">
                         <button
                             type="button"
                             onClick={() => setFormData(prev => ({ ...prev, is_public: true }))}
-                            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border text-sm font-mono transition-all cursor-pointer ${formData.is_public ? 'bg-primary/10 border-primary text-primary' : 'bg-white/5 border-white/10 text-zinc-500 hover:border-white/20'}`}
+                            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border text-sm font-medium transition-all duration-200 cursor-pointer ${formData.is_public
+                                ? 'bg-primary/10 border-primary/40 text-primary shadow-[0_0_15px_rgba(248,92,58,0.08)]'
+                                : 'bg-zinc-900/50 border-white/10 text-zinc-500 hover:border-white/20 hover:text-zinc-400'
+                                }`}
                         >
                             <Globe className="w-4 h-4" /> Public
                         </button>
                         <button
                             type="button"
                             onClick={() => setFormData(prev => ({ ...prev, is_public: false }))}
-                            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border text-sm font-mono transition-all cursor-pointer ${!formData.is_public ? 'bg-yellow-500/10 border-yellow-500 text-yellow-500' : 'bg-white/5 border-white/10 text-zinc-500 hover:border-white/20'}`}
+                            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border text-sm font-medium transition-all duration-200 cursor-pointer ${!formData.is_public
+                                ? 'bg-yellow-500/10 border-yellow-500/40 text-yellow-400 shadow-[0_0_15px_rgba(234,179,8,0.08)]'
+                                : 'bg-zinc-900/50 border-white/10 text-zinc-500 hover:border-white/20 hover:text-zinc-400'
+                                }`}
                         >
                             <Lock className="w-4 h-4" /> Private
                         </button>
                     </div>
+                </motion.div>
 
-                    <div className="bg-white/[0.02] border border-white/5 rounded-lg p-5 space-y-3">
-                        <h3 className="text-xs font-mono text-secondary uppercase tracking-widest flex items-center gap-2"><AlertCircle className="w-3 h-3 text-primary" /> Guidelines</h3>
-                        <ul className="text-xs text-zinc-400 space-y-2 list-disc pl-4">
-                            <li>Ensure content is clearly visible and readable.</li>
-                            <li>Do not upload copyrighted material without permission.</li>
-                            <li><strong>Public</strong> resources are visible to all users.</li>
-                            <li><strong>Private</strong> resources are only visible to your college.</li>
-                        </ul>
-                    </div>
-                </div>
-
-                {/* Right Col: Metadata Form */}
-                <form onSubmit={handleSubmit} className="lg:col-span-3 space-y-5">
-                    <div className="space-y-1">
-                        <label className={labelClass}>Title *</label>
-                        <input type="text" name="title" value={formData.title} onChange={handleChange} required placeholder="e.g. Data Structures Unit 1 Notes" className={inputClass} />
-                    </div>
-
-                    <div className="space-y-1">
-                        <label className={labelClass}>Subject / Course Name *</label>
-                        <input type="text" name="subject" value={formData.subject} onChange={handleChange} required placeholder="e.g. Operating Systems" className={inputClass} />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                            <label className={labelClass}>Semester</label>
-                            <select name="semester" value={formData.semester} onChange={handleChange} className={inputClass + ' appearance-none'}>
-                                {['1', '2', '3', '4', '5', '6', '7', '8'].map(s => <option key={s} value={s}>Semester {s}</option>)}
-                            </select>
-                        </div>
-                        <div className="space-y-1">
-                            <label className={labelClass}>Resource Type</label>
-                            <select name="resource_type" value={formData.resource_type} onChange={handleChange} className={inputClass + ' appearance-none'}>
-                                {['Notes', 'Question Paper', 'Solutions', 'Project Report', 'Study Material', 'Assignment', 'Lab Manual', 'Presentation'].map(t => <option key={t} value={t}>{t}</option>)}
-                            </select>
-                        </div>
-                    </div>
-
-                    <div className="space-y-1">
-                        <label className={labelClass}>Year</label>
-                        <select name="year" value={formData.year} onChange={handleChange} className={inputClass + ' appearance-none'}>
-                            {[2026, 2025, 2024, 2023, 2022, 2021, 2020].map(y => <option key={y} value={y}>{y}</option>)}
-                        </select>
-                    </div>
-
-                    <div className="space-y-1">
-                        <label className={labelClass}>Description (optional)</label>
-                        <textarea name="description" value={formData.description} onChange={handleChange} placeholder="Brief description of the resource..." rows={3} className={inputClass + ' resize-none'} />
-                    </div>
-
-                    <div className="space-y-1">
-                        <label className={labelClass}><Tag className="w-3 h-3 inline mr-1" />Tags / Keywords</label>
-                        <input type="text" name="tags" value={formData.tags} onChange={handleChange} placeholder="e.g. data-structures, algorithms, mid-term (comma separated)" className={inputClass} />
-                    </div>
-
-                    <div className="pt-4">
-                        <Button type="submit" className="w-full" disabled={uploading || !file || !formData.title || !formData.subject}>
-                            {uploading ? (
-                                <span className="flex items-center gap-2"><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>Uploading...</span>
-                            ) : success ? (
-                                <span className="flex items-center gap-2 text-green-400"><CheckCircle className="w-4 h-4" /> Uploaded Successfully!</span>
-                            ) : (
-                                "Publish Resource"
-                            )}
-                        </Button>
-                    </div>
-                </form>
-            </div>
-        </div>
+                {/* ─── Submit ─── */}
+                <motion.div
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.15 }}
+                    className="flex justify-end"
+                >
+                    <Button
+                        type="submit"
+                        disabled={uploading}
+                        className="w-full sm:w-auto px-10 py-3.5 text-sm font-medium"
+                    >
+                        {uploading ? (
+                            <span className="flex items-center gap-2">
+                                <span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                                Uploading…
+                            </span>
+                        ) : (
+                            <span className="flex items-center gap-2">
+                                <UploadIcon className="w-4 h-4" /> Upload Resource
+                            </span>
+                        )}
+                    </Button>
+                </motion.div>
+            </form>
+        </PageLayout>
     );
 };
 

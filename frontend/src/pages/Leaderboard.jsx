@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, Medal, Award, TrendingUp } from 'lucide-react';
+import { Trophy, Medal, Award, TrendingUp, Crown } from 'lucide-react';
 import GlassCard from '../components/ui/GlassCard';
+import PageLayout from '../components/PageLayout';
 import { fetchLeaderboard } from '../lib/api';
 
 const Leaderboard = () => {
@@ -44,121 +45,171 @@ const Leaderboard = () => {
     const restContributors = contributors.slice(3);
 
     return (
-        <div className="min-h-screen pt-24 px-6 max-w-5xl mx-auto">
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-center mb-12"
-            >
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 text-xs font-mono mb-4">
-                    <Trophy className="w-3 h-3" /> Campus Legends
-                </div>
-                <h1 className="text-4xl md:text-5xl font-display font-medium text-white mb-4">Leaderboard</h1>
-                <p className="text-secondary">Earn Karma by uploading quality resources and helping others.</p>
-            </motion.div>
+        <PageLayout title="Leaderboard" subtitle="Top Contributors">
+            <div className="max-w-5xl mx-auto">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-center mb-16"
+                >
+                    <p className="text-secondary mb-8 max-w-lg mx-auto">
+                        Earn Karma Points (KP) by uploading high-quality resources. Verified uploads help the entire community.
+                    </p>
+                </motion.div>
 
-            {contributors.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 text-center">
-                    <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4">
-                        <Trophy className="w-6 h-6 text-zinc-600" />
+                {contributors.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-20 text-center bg-white/[0.02] border border-white/5 rounded-2xl">
+                        <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4">
+                            <Trophy className="w-6 h-6 text-zinc-600" />
+                        </div>
+                        <h3 className="text-white font-medium mb-1">No contributors yet</h3>
+                        <p className="text-zinc-500 text-sm">Be the first to upload a resource!</p>
                     </div>
-                    <h3 className="text-white font-medium mb-1">No contributors yet</h3>
-                    <p className="text-zinc-500 text-sm">Be the first to upload a resource!</p>
-                </div>
-            ) : (
-                <>
-                    {/* Top 3 Podium */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 items-end">
-                        {/* 2nd Place */}
-                        {topContributors[1] && (
-                            <GlassCard className="order-2 md:order-1 flex flex-col items-center border-t-4 border-t-zinc-400">
-                                <div className="w-8 h-8 rounded-full bg-zinc-800 text-white flex items-center justify-center font-bold mb-4 -mt-10 border-4 border-[#0A0A0F]">2</div>
-                                {topContributors[1].avatar_url ? (
-                                    <img src={topContributors[1].avatar_url} alt="" className="w-16 h-16 rounded-full mb-3 object-cover border border-white/10" />
-                                ) : (
-                                    <div className="w-16 h-16 rounded-full bg-zinc-700 mb-3 flex items-center justify-center text-xl font-bold">{getInitials(topContributors[1].name)}</div>
-                                )}
-                                <h3 className="font-display text-lg text-white">{topContributors[1].name}</h3>
-                                <p className="text-xs text-secondary font-mono mb-2">{topContributors[1].branch}{topContributors[1].semester ? ` • Sem ${topContributors[1].semester}` : ''}</p>
-                                <div className="text-primary font-bold">{topContributors[1].karma} KP</div>
-                            </GlassCard>
-                        )}
+                ) : (
+                    <>
+                        {/* Top 3 Podium */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16 items-end relative">
+                            {/* Background Glow */}
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-primary/5 blur-[100px] rounded-full pointer-events-none" />
 
-                        {/* 1st Place */}
-                        {topContributors[0] && (
-                            <GlassCard className="order-1 md:order-2 flex flex-col items-center border-t-4 border-t-yellow-500 scale-110 shadow-[0_0_30px_rgba(234,179,8,0.2)] z-10">
-                                <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-yellow-500">
-                                    <Trophy className="w-10 h-10 fill-current" />
-                                </div>
-                                {topContributors[0].avatar_url ? (
-                                    <img src={topContributors[0].avatar_url} alt="" className="w-20 h-20 rounded-full mt-6 mb-3 object-cover border-2 border-yellow-500/50" />
-                                ) : (
-                                    <div className="w-20 h-20 rounded-full bg-yellow-500/20 text-yellow-500 border border-yellow-500/50 mb-3 flex items-center justify-center text-2xl font-bold mt-6">{getInitials(topContributors[0].name)}</div>
-                                )}
-                                <h3 className="font-display text-xl text-white">{topContributors[0].name}</h3>
-                                <p className="text-xs text-secondary font-mono mb-2">{topContributors[0].branch}{topContributors[0].semester ? ` • Sem ${topContributors[0].semester}` : ''}</p>
-                                <div className="text-yellow-500 font-bold text-xl">{topContributors[0].karma} KP</div>
-                                <div className="mt-2 px-2 py-0.5 rounded bg-yellow-500/20 text-[10px] text-yellow-500 border border-yellow-500/20">
-                                    Top Contributor
-                                </div>
-                            </GlassCard>
-                        )}
-
-                        {/* 3rd Place */}
-                        {topContributors[2] && (
-                            <GlassCard className="order-3 md:order-3 flex flex-col items-center border-t-4 border-t-orange-700">
-                                <div className="w-8 h-8 rounded-full bg-zinc-800 text-white flex items-center justify-center font-bold mb-4 -mt-10 border-4 border-[#0A0A0F]">3</div>
-                                {topContributors[2].avatar_url ? (
-                                    <img src={topContributors[2].avatar_url} alt="" className="w-16 h-16 rounded-full mb-3 object-cover border border-white/10" />
-                                ) : (
-                                    <div className="w-16 h-16 rounded-full bg-zinc-700 mb-3 flex items-center justify-center text-xl font-bold">{getInitials(topContributors[2].name)}</div>
-                                )}
-                                <h3 className="font-display text-lg text-white">{topContributors[2].name}</h3>
-                                <p className="text-xs text-secondary font-mono mb-2">{topContributors[2].branch}{topContributors[2].semester ? ` • Sem ${topContributors[2].semester}` : ''}</p>
-                                <div className="text-primary font-bold">{topContributors[2].karma} KP</div>
-                            </GlassCard>
-                        )}
-                    </div>
-
-                    {/* List View */}
-                    {restContributors.length > 0 && (
-                        <div className="space-y-3">
-                            {restContributors.map((contributor, index) => (
+                            {/* 2nd Place */}
+                            {topContributors[1] && (
                                 <motion.div
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: index * 0.1 }}
-                                    key={contributor.id}
-                                    className="flex items-center justify-between p-4 bg-[#121217] border border-white/5 rounded-lg hover:border-white/10 transition-colors"
+                                    initial={{ opacity: 0, y: 40 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.2 }}
+                                    className="order-2 md:order-1 relative"
                                 >
-                                    <div className="flex items-center gap-4">
-                                        <span className="font-mono text-zinc-500 text-sm w-6">{String(index + 4).padStart(2, '0')}</span>
-                                        {contributor.avatar_url ? (
-                                            <img src={contributor.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover border border-white/10" />
-                                        ) : (
-                                            <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-xs text-white">
-                                                {contributor.name.charAt(0)}
-                                            </div>
-                                        )}
-                                        <div>
-                                            <h4 className="text-sm font-medium text-white">{contributor.name}</h4>
-                                            <p className="text-[10px] text-zinc-500">{contributor.branch}{contributor.semester ? ` • Sem ${contributor.semester}` : ''}</p>
+                                    <div className="bg-[#121217]/80 backdrop-blur-md border border-white/10 rounded-2xl p-6 flex flex-col items-center relative overflow-hidden group hover:border-white/20 transition-all">
+                                        <div className="absolute top-0 left-0 w-full h-1 bg-zinc-400" />
+                                        <div className="w-8 h-8 rounded-full bg-zinc-800 text-zinc-400 border border-zinc-700 flex items-center justify-center font-bold text-sm mb-6 shadow-lg">2</div>
+
+                                        <div className="relative mb-4">
+                                            {topContributors[1].avatar_url ? (
+                                                <img src={topContributors[1].avatar_url} alt="" className="w-20 h-20 rounded-full object-cover border-2 border-zinc-500/30" />
+                                            ) : (
+                                                <div className="w-20 h-20 rounded-full bg-zinc-800 flex items-center justify-center text-xl font-bold border-2 border-zinc-500/30 text-zinc-400">{getInitials(topContributors[1].name)}</div>
+                                            )}
                                         </div>
-                                    </div>
-                                    <div className="flex items-center gap-6">
-                                        <div className="text-right hidden sm:block">
-                                            <span className="block text-xs text-white font-medium">{contributor.uploads}</span>
-                                            <span className="block text-[10px] text-zinc-600">Uploads</span>
+
+                                        <h3 className="font-display text-lg text-white mb-1">{topContributors[1].name}</h3>
+                                        <p className="text-xs text-zinc-500 font-mono mb-3">{topContributors[1].branch}</p>
+                                        <div className="px-3 py-1 bg-white/5 rounded-full text-zinc-300 font-mono text-sm font-bold border border-white/5">
+                                            {topContributors[1].karma} KP
                                         </div>
-                                        <div className="font-mono font-bold text-primary">{contributor.karma} KP</div>
                                     </div>
                                 </motion.div>
-                            ))}
+                            )}
+
+                            {/* 1st Place */}
+                            {topContributors[0] && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 40, scale: 0.9 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    className="order-1 md:order-2 relative z-10 -mt-12 md:-mt-0"
+                                >
+                                    <div className="bg-gradient-to-b from-[#1a1a23] to-[#0d0d12] backdrop-blur-xl border border-yellow-500/30 rounded-2xl p-8 flex flex-col items-center relative overflow-hidden shadow-[0_0_50px_rgba(234,179,8,0.15)] transform md:-translate-y-8">
+                                        <div className="absolute top-0 left-0 w-full h-1 bg-yellow-500" />
+                                        <div className="absolute inset-0 bg-yellow-500/5 pointer-events-none" />
+
+                                        <div className="absolute -top-5">
+                                            <Crown className="w-10 h-10 text-yellow-500 fill-yellow-500/20 drop-shadow-[0_0_10px_rgba(234,179,8,0.5)]" />
+                                        </div>
+
+                                        <div className="relative mb-6 mt-4">
+                                            <div className="absolute inset-0 bg-yellow-500/20 blur-xl rounded-full" />
+                                            {topContributors[0].avatar_url ? (
+                                                <img src={topContributors[0].avatar_url} alt="" className="w-24 h-24 rounded-full object-cover border-4 border-yellow-500/50 relative z-10" />
+                                            ) : (
+                                                <div className="w-24 h-24 rounded-full bg-yellow-900/20 flex items-center justify-center text-3xl font-bold border-4 border-yellow-500/50 text-yellow-500 relative z-10">{getInitials(topContributors[0].name)}</div>
+                                            )}
+                                        </div>
+
+                                        <h3 className="font-display text-2xl text-white mb-2">{topContributors[0].name}</h3>
+                                        <p className="text-xs text-yellow-500/60 font-mono mb-4 uppercase tracking-widest">{topContributors[0].branch} • Sem {topContributors[0].semester}</p>
+
+                                        <div className="px-6 py-2 bg-yellow-500/10 rounded-full text-yellow-400 font-display text-xl font-bold border border-yellow-500/30 shadow-[0_0_15px_rgba(234,179,8,0.2)]">
+                                            {topContributors[0].karma} KP
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            )}
+
+                            {/* 3rd Place */}
+                            {topContributors[2] && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 40 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.3 }}
+                                    className="order-3 md:order-3 relative"
+                                >
+                                    <div className="bg-[#121217]/80 backdrop-blur-md border border-white/10 rounded-2xl p-6 flex flex-col items-center relative overflow-hidden group hover:border-white/20 transition-all">
+                                        <div className="absolute top-0 left-0 w-full h-1 bg-orange-700" />
+                                        <div className="w-8 h-8 rounded-full bg-zinc-800 text-orange-700 border border-zinc-700 flex items-center justify-center font-bold text-sm mb-6 shadow-lg">3</div>
+
+                                        <div className="relative mb-4">
+                                            {topContributors[2].avatar_url ? (
+                                                <img src={topContributors[2].avatar_url} alt="" className="w-20 h-20 rounded-full object-cover border-2 border-orange-700/30" />
+                                            ) : (
+                                                <div className="w-20 h-20 rounded-full bg-zinc-800 flex items-center justify-center text-xl font-bold border-2 border-orange-700/30 text-orange-700">{getInitials(topContributors[2].name)}</div>
+                                            )}
+                                        </div>
+
+                                        <h3 className="font-display text-lg text-white mb-1">{topContributors[2].name}</h3>
+                                        <p className="text-xs text-zinc-500 font-mono mb-3">{topContributors[2].branch}</p>
+                                        <div className="px-3 py-1 bg-white/5 rounded-full text-zinc-300 font-mono text-sm font-bold border border-white/5">
+                                            {topContributors[2].karma} KP
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            )}
                         </div>
-                    )}
-                </>
-            )}
-        </div>
+
+                        {/* List View */}
+                        {restContributors.length > 0 && (
+                            <div className="space-y-3 max-w-4xl mx-auto">
+                                <h3 className="text-xs font-mono text-zinc-500 uppercase tracking-widest mb-6 pl-2">Runner Ups</h3>
+                                {restContributors.map((contributor, index) => (
+                                    <motion.div
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: 0.4 + (index * 0.05) }}
+                                        key={contributor.id}
+                                        className="flex items-center justify-between p-4 bg-[#121217] border border-white/5 rounded-xl hover:border-white/10 hover:bg-white/[0.03] transition-colors group"
+                                    >
+                                        <div className="flex items-center gap-6">
+                                            <span className="font-mono text-zinc-600 text-sm w-6 group-hover:text-zinc-400 transition-colors">{String(index + 4).padStart(2, '0')}</span>
+
+                                            <div className="flex items-center gap-4">
+                                                {contributor.avatar_url ? (
+                                                    <img src={contributor.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover border border-white/10" />
+                                                ) : (
+                                                    <div className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center text-xs text-zinc-400 font-bold border border-white/5">
+                                                        {getInitials(contributor.name)}
+                                                    </div>
+                                                )}
+                                                <div>
+                                                    <h4 className="text-base font-medium text-white group-hover:text-primary transition-colors">{contributor.name}</h4>
+                                                    <p className="text-[10px] text-zinc-500">{contributor.branch}{contributor.semester ? ` • Sem ${contributor.semester}` : ''}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-8">
+                                            <div className="text-right hidden sm:block">
+                                                <span className="block text-sm text-zinc-300 font-medium">{contributor.uploads}</span>
+                                                <span className="block text-[10px] text-zinc-600 uppercase">Uploads</span>
+                                            </div>
+                                            <div className="font-mono font-bold text-primary w-16 text-right">{contributor.karma} KP</div>
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        )}
+                    </>
+                )}
+            </div>
+        </PageLayout>
     );
 };
 

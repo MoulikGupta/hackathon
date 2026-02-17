@@ -32,8 +32,8 @@ const features = [
 /* ─── Single Feature Card ─── */
 const FeatureCard = ({ feature, index, scrollYProgress }) => {
     const total = features.length;
-    const cardWidth = 260;
-    const gap = 24;
+    const cardWidth = 240;
+    const gap = 16;
 
     // Staggered entrance delay per card
     const staggerDelay = index * 0.04;
@@ -105,41 +105,41 @@ const FeatureCard = ({ feature, index, scrollYProgress }) => {
             }}
             className="absolute w-[260px] h-[360px]"
         >
-            {/* Card — matches glass-panel style */}
-            <div className="relative w-full h-full rounded-none border border-white/10 backdrop-blur-xl overflow-hidden flex flex-col p-6 transition-colors duration-500 hover:border-primary/30"
-                style={{ background: 'rgba(255, 255, 255, 0.03)' }}
+            {/* Card — updated for better visibility/contrast while keeping dark theme */}
+            <div className="relative w-full h-full rounded-none border border-white/10 backdrop-blur-md overflow-hidden flex flex-col p-6 transition-all duration-500 hover:border-primary/50 hover:bg-zinc-800/50 group-hover:shadow-[0_0_30px_rgba(248,92,58,0.1)]"
+                style={{ background: 'linear-gradient(145deg, rgba(20, 20, 23, 0.9) 0%, rgba(10, 10, 12, 0.8) 100%)' }}
             >
 
                 {/* Glow overlay on scroll completion */}
                 <motion.div
                     style={{ opacity: glowOpacity }}
-                    className="absolute inset-0 pointer-events-none"
+                    className="absolute inset-0 pointer-events-none bg-gradient-to-t from-primary/5 to-transparent"
                 />
 
-                {/* Number badge — mono style */}
-                <span className="font-mono text-[10px] tracking-[0.2em] text-white/30 uppercase mb-6">
+                {/* Number badge — clearer mono style */}
+                <span className="font-mono text-[10px] tracking-[0.2em] text-zinc-500 uppercase mb-6 group-hover:text-primary/70 transition-colors">
                     {feature.num}
                 </span>
 
-                {/* Icon — brand primary accent */}
-                <div className="w-14 h-14 rounded-none border border-primary/20 bg-primary/10 flex items-center justify-center mb-6">
-                    <Icon className="w-6 h-6 text-primary" />
+                {/* Icon — Better contrast container */}
+                <div className="w-14 h-14 rounded-none border border-white/10 bg-white/5 flex items-center justify-center mb-6 group-hover:border-primary/30 group-hover:bg-primary/10 transition-all duration-300">
+                    <Icon className="w-6 h-6 text-primary drop-shadow-[0_0_8px_rgba(248,92,58,0.5)]" />
                 </div>
 
                 {/* Title — display font */}
-                <h3 className="font-display text-xl font-medium text-white mb-3 tracking-tight">
+                <h3 className="font-display text-xl font-medium text-white mb-3 tracking-tight group-hover:text-primary transition-colors">
                     {feature.title}
                 </h3>
 
-                {/* Description — mono */}
-                <p className="text-sm text-white/40 leading-relaxed font-mono flex-1">
+                {/* Description — lighter text for readability */}
+                <p className="text-sm text-zinc-400 leading-relaxed font-mono flex-1 group-hover:text-zinc-300 transition-colors">
                     {feature.desc}
                 </p>
 
                 {/* Bottom accent line — brand primary */}
                 <motion.div
                     style={{ opacity: glowOpacity }}
-                    className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary"
+                    className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary shadow-[0_0_15px_rgba(248,92,58,0.8)]"
                 />
             </div>
         </motion.div>

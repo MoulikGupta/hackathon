@@ -14,13 +14,19 @@ const Navbar = () => {
 
     useEffect(() => {
         const handleScroll = () => {
-            // Show navbar only after scrolling past the "Built for Students" phase (approx 50% of 500vh hero)
-            setIsVisible(window.scrollY > window.innerHeight * 2.5);
+            if (location.pathname === '/') {
+                // Home: Show navbar only after scrolling past heavy hero (approx 2.5 screens)
+                setIsVisible(window.scrollY > window.innerHeight * 2.5);
+            } else {
+                // Other pages: Always visible
+                setIsVisible(true);
+            }
         };
-        handleScroll(); // Check on mount
+
+        handleScroll(); // Check on mount/route change
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
+    }, [location.pathname]);
 
     const navLinks = [
         { name: 'RESOURCES', path: '/browse' },
