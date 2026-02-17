@@ -1,16 +1,20 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { User, Settings, Medal, Download, Upload, Star } from 'lucide-react';
 import Button from '../components/ui/Button';
 import ResourceCard from '../components/ResourceCard';
 import { MOCK_RESOURCES } from '../data/mockData';
+import { useAuth } from '../context/AuthContext';
 
 const Profile = () => {
-    // Mock user data
-    const user = {
-        name: "Daksh Jain",
-        email: "daksh@university.edu",
-        role: "CSE • 5th Sem",
+    const { user } = useAuth();
+
+    // Build profile from real auth data
+    const profile = {
+        name: user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User',
+        email: user?.email || '',
+        avatar_url: user?.user_metadata?.avatar_url || null,
+        role: "CSE • Student",
         bio: "Exploring the depths of Computer Science. Always learning.",
         stats: {
             karma: 1250,
@@ -20,7 +24,16 @@ const Profile = () => {
         }
     };
 
-    const userUploads = MOCK_RESOURCES.slice(0, 3); // Simulate user's recent uploads
+    // Get initials for fallback avatar
+    const getInitials = () => {
+        const name = profile.name;
+        const parts = name.split(' ');
+        return parts.length >= 2
+            ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+            : name.substring(0, 2).toUpperCase();
+    };
+
+    const userUploads = MOCK_RESOURCES.slice(0, 3);
 
     return (
         <div className="min-h-screen pt-24 px-6 max-w-6xl mx-auto pb-12">
@@ -39,21 +52,30 @@ const Profile = () => {
 
                 {/* Profile Info */}
                 <div className="px-6 relative flex flex-col md:flex-row items-start md:items-end -mt-16 gap-6">
-                    <div className="w-32 h-32 rounded-xl bg-surface border-4 border-[#0A0A0F] shadow-xl flex items-center justify-center text-4xl font-bold text-white relative z-10 overflow-hidden">
-                        {/* Placeholder Avatar */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-zinc-800 to-black"></div>
-                        <span className="relative z-10">DJ</span>
+                    <div className="w-32 h-32 rounded-xl border-4 border-[#0A0A0F] shadow-xl flex items-center justify-center text-4xl font-bold text-white relative z-10 overflow-hidden">
+                        {profile.avatar_url ? (
+                            <img
+                                src={profile.avatar_url}
+                                alt={profile.name}
+                                className="w-full h-full object-cover"
+                            />
+                        ) : (
+                            <>
+                                <div className="absolute inset-0 bg-gradient-to-br from-zinc-800 to-black"></div>
+                                <span className="relative z-10">{getInitials()}</span>
+                            </>
+                        )}
                     </div>
 
                     <div className="flex-1 pb-2">
                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                             <div>
                                 <h1 className="text-3xl font-display font-bold text-white flex items-center gap-2">
-                                    {user.name}
+                                    {profile.name}
                                     <Medal className="w-5 h-5 text-yellow-500" />
                                 </h1>
-                                <p className="text-secondary font-mono text-sm">{user.role}</p>
-                                <p className="text-zinc-500 text-sm mt-1 max-w-md">{user.bio}</p>
+                                <p className="text-secondary font-mono text-sm">{profile.role}</p>
+                                <p className="text-zinc-500 text-sm mt-1 max-w-md">{profile.email}</p>
                             </div>
 
                             <div className="flex gap-3">
@@ -68,10 +90,10 @@ const Profile = () => {
             {/* Stats Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
                 {[
-                    { label: 'Karma Points', value: user.stats.karma, icon: Star, color: 'text-yellow-500' },
-                    { label: 'Total Uploads', value: user.stats.uploads, icon: Upload, color: 'text-blue-400' },
-                    { label: 'Downloads Received', value: user.stats.downloads, icon: Download, color: 'text-green-400' },
-                    { label: 'Avg Rating', value: user.stats.avgRating, icon: Medal, color: 'text-purple-400' }
+                    { label: 'Karma Points', value: profile.stats.karma, icon: Star, color: 'text-yellow-500' },
+                    { label: 'Total Uploads', value: profile.stats.uploads, icon: Upload, color: 'text-blue-400' },
+                    { label: 'Downloads Received', value: profile.stats.downloads, icon: Download, color: 'text-green-400' },
+                    { label: 'Avg Rating', value: profile.stats.avgRating, icon: Medal, color: 'text-purple-400' }
                 ].map((stat, i) => (
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}

@@ -6,7 +6,9 @@ import Browse from './pages/Browse';
 import Upload from './pages/Upload';
 import Leaderboard from './pages/Leaderboard';
 import Profile from './pages/Profile';
+import Login from './pages/Login';
 import LoadingScreen from './components/LoadingScreen';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -23,9 +25,18 @@ function App() {
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/browse" element={<Browse />} />
-                <Route path="/upload" element={<Upload />} />
+                <Route path="/login" element={<Login />} />
                 <Route path="/leaderboard" element={<Leaderboard />} />
-                <Route path="/profile" element={<Profile />} />
+                <Route path="/upload" element={
+                  <ProtectedRoute>
+                    <Upload />
+                  </ProtectedRoute>
+                } />
+                <Route path="/profile" element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                } />
               </Routes>
             </main>
           </>

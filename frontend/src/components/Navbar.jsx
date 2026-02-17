@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Bell, User, Menu, X } from 'lucide-react';
+import { Search, Bell, User, Menu, X, LogOut } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { useAuth } from '../context/AuthContext';
 
 const Navbar = () => {
     const [isScrolled, setIsScrolled] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const location = useLocation();
+    const navigate = useNavigate();
+    const { user, signOut } = useAuth();
 
     useEffect(() => {
         const handleScroll = () => setIsScrolled(window.scrollY > 50);
@@ -21,6 +24,24 @@ const Navbar = () => {
         { name: 'PARTNERS', path: '/leaderboard' },
         { name: 'COMPANY', path: '/profile' },
     ];
+
+    const handleSignOut = async () => {
+        await signOut();
+        navigate('/');
+    };
+
+    // Get user initials for avatar
+    const getUserInitials = () => {
+        if (!user) return '';
+        const name = user.user_metadata?.full_name || user.email || '';
+        if (user.user_metadata?.full_name) {
+            const parts = name.split(' ');
+            return parts.length >= 2
+                ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+                : name.substring(0, 2).toUpperCase();
+        }
+        return name.substring(0, 2).toUpperCase();
+    };
 
     return (
         <>
@@ -81,18 +102,53 @@ const Navbar = () => {
 
                     {/* Right Actions */}
                     <div className="hidden md:flex items-center gap-3">
-                        <NavLink
-                            to="/browse"
-                            className="px-4 py-2 text-[11px] font-mono uppercase tracking-wider text-white/70 border border-white/20 hover:border-white/40 transition-colors"
-                        >
-                            LOGIN
-                        </NavLink>
-                        <NavLink
-                            to="/upload"
-                            className="px-4 py-2 text-[11px] font-mono uppercase tracking-wider text-black bg-primary hover:bg-[#ff7a5c] transition-colors"
-                        >
-                            GET STARTED FREE
-                        </NavLink>
+                        {user ? (
+                            <>
+                                {/* User Avatar */}
+                                <NavLink
+                                    to="/profile"
+                                    className="flex items-center gap-2 group"
+                                >
+                                    {user.user_metadata?.avatar_url ? (
+                                        <img
+                                            src={user.user_metadata.avatar_url}
+                                            alt="Avatar"
+                                            className="w-8 h-8 rounded-full border border-white/20 group-hover:border-primary/50 transition-colors object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-8 h-8 rounded-full border border-white/20 bg-white/5 flex items-center justify-center group-hover:border-primary/50 transition-colors">
+                                            <span className="text-[10px] font-mono font-bold text-white/70">
+                                                {getUserInitials()}
+                                            </span>
+                                        </div>
+                                    )}
+                                </NavLink>
+
+                                {/* Sign Out Button */}
+                                <button
+                                    onClick={handleSignOut}
+                                    className="px-4 py-2 text-[11px] font-mono uppercase tracking-wider text-white/70 border border-white/20 hover:border-red-500/50 hover:text-red-400 transition-colors flex items-center gap-2 cursor-pointer"
+                                >
+                                    <LogOut className="w-3.5 h-3.5" />
+                                    SIGN OUT
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <NavLink
+                                    to="/login"
+                                    className="px-4 py-2 text-[11px] font-mono uppercase tracking-wider text-white/70 border border-white/20 hover:border-white/40 transition-colors"
+                                >
+                                    LOGIN
+                                </NavLink>
+                                <NavLink
+                                    to="/login"
+                                    className="px-4 py-2 text-[11px] font-mono uppercase tracking-wider text-black bg-primary hover:bg-[#ff7a5c] transition-colors"
+                                >
+                                    GET STARTED FREE
+                                </NavLink>
+                            </>
+                        )}
                     </div>
 
                     {/* Mobile Toggle */}
@@ -139,6 +195,55 @@ const Navbar = () => {
                                     </NavLink>
                                 </motion.div>
                             ))}
+
+                            {/* Mobile Auth Actions */}
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: navLinks.length * 0.1 }}
+                                className="mt-4 pt-4 border-t border-white/10"
+                            >
+                                {user ? (
+                                    <div className="flex flex-col items-center gap-4">
+                                        <div className="flex items-center gap-3">
+                                            {user.user_metadata?.avatar_url ? (
+                                                <img
+                                                    src={user.user_metadata.avatar_url}
+                                                    alt="Avatar"
+                                                    className="w-10 h-10 rounded-full border border-white/20 object-cover"
+                                                />
+                                            ) : (
+                                                <div className="w-10 h-10 rounded-full border border-white/20 bg-white/5 flex items-center justify-center">
+                                                    <span className="text-xs font-mono font-bold text-white/70">
+                                                        {getUserInitials()}
+                                                    </span>
+                                                </div>
+                                            )}
+                                            <span className="text-sm text-white/70 font-mono">
+                                                {user.user_metadata?.full_name || user.email}
+                                            </span>
+                                        </div>
+                                        <button
+                                            onClick={() => {
+                                                handleSignOut();
+                                                setMobileMenuOpen(false);
+                                            }}
+                                            className="text-red-400 hover:text-red-300 text-sm font-mono uppercase tracking-wider flex items-center gap-2 cursor-pointer"
+                                        >
+                                            <LogOut className="w-4 h-4" />
+                                            Sign Out
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <NavLink
+                                        to="/login"
+                                        onClick={() => setMobileMenuOpen(false)}
+                                        className="text-xl font-display font-medium text-primary hover:text-[#ff7a5c] transition-colors"
+                                    >
+                                        LOGIN
+                                    </NavLink>
+                                )}
+                            </motion.div>
                         </div>
                     </motion.div>
                 )}
