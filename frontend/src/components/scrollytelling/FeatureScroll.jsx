@@ -67,12 +67,7 @@ const FeatureCard = ({ feature, index, scrollYProgress }) => {
         [0.7, 0.85, 1, 1]
     );
 
-    // --- Opacity ---
-    const opacity = useTransform(
-        scrollYProgress,
-        [0, 0.1 + staggerDelay, 0.3],
-        [0, 0.5, 1]
-    );
+    // --- Opacity removed: cards are always fully visible once in viewport ---
 
     // --- 3D perspective tilt ---
     const rotateY = useTransform(
@@ -98,16 +93,15 @@ const FeatureCard = ({ feature, index, scrollYProgress }) => {
                 rotateZ,
                 rotateY,
                 scale,
-                opacity,
                 transformPerspective: 1200,
                 transformOrigin: 'center bottom',
                 zIndex: total - index,
             }}
-            className="absolute w-[260px] h-[360px]"
+            className="absolute w-[260px] h-[360px] opacity-100"
         >
-            {/* Card — updated for better visibility/contrast while keeping dark theme */}
-            <div className="relative w-full h-full rounded-none border border-white/10 backdrop-blur-md overflow-hidden flex flex-col p-6 transition-all duration-500 hover:border-primary/50 hover:bg-zinc-800/50 group-hover:shadow-[0_0_30px_rgba(248,92,58,0.1)]"
-                style={{ background: 'linear-gradient(145deg, rgba(20, 20, 23, 0.9) 0%, rgba(10, 10, 12, 0.8) 100%)' }}
+            {/* Card — high-visibility dark card */}
+            <div className="relative w-full h-full rounded-none border border-white/20 backdrop-blur-md overflow-hidden flex flex-col p-6 transition-all duration-500 hover:border-primary/60 hover:bg-zinc-800/60"
+                style={{ background: 'linear-gradient(145deg, rgba(30, 30, 35, 0.95) 0%, rgba(20, 20, 24, 0.95) 100%)' }}
             >
 
                 {/* Glow overlay on scroll completion */}
@@ -116,23 +110,23 @@ const FeatureCard = ({ feature, index, scrollYProgress }) => {
                     className="absolute inset-0 pointer-events-none bg-gradient-to-t from-primary/5 to-transparent"
                 />
 
-                {/* Number badge — clearer mono style */}
-                <span className="font-mono text-[10px] tracking-[0.2em] text-zinc-500 uppercase mb-6 group-hover:text-primary/70 transition-colors">
+                {/* Number badge */}
+                <span className="font-mono text-[10px] tracking-[0.2em] text-zinc-400 uppercase mb-6">
                     {feature.num}
                 </span>
 
-                {/* Icon — Better contrast container */}
-                <div className="w-14 h-14 rounded-none border border-white/10 bg-white/5 flex items-center justify-center mb-6 group-hover:border-primary/30 group-hover:bg-primary/10 transition-all duration-300">
-                    <Icon className="w-6 h-6 text-primary drop-shadow-[0_0_8px_rgba(248,92,58,0.5)]" />
+                {/* Icon — high contrast container */}
+                <div className="w-14 h-14 rounded-none border border-primary/40 bg-primary/15 flex items-center justify-center mb-6">
+                    <Icon className="w-6 h-6 text-primary drop-shadow-[0_0_10px_rgba(248,92,58,0.6)]" />
                 </div>
 
-                {/* Title — display font */}
-                <h3 className="font-display text-xl font-medium text-white mb-3 tracking-tight group-hover:text-primary transition-colors">
+                {/* Title */}
+                <h3 className="font-display text-xl font-semibold text-white mb-3 tracking-tight">
                     {feature.title}
                 </h3>
 
-                {/* Description — lighter text for readability */}
-                <p className="text-sm text-zinc-400 leading-relaxed font-mono flex-1 group-hover:text-zinc-300 transition-colors">
+                {/* Description */}
+                <p className="text-sm text-zinc-300 leading-relaxed font-mono flex-1">
                     {feature.desc}
                 </p>
 
