@@ -1,6 +1,6 @@
 <div align="center">
 
-# 📚 STUDYSYNC
+# 📚 NOTESPHERE
 
 **A premium academic resource-sharing platform for college students**
 

@@ -141,8 +141,8 @@ const Profile = () => {
                 </div>
 
                 {/* Stats */}
-                <div className="space-y-4">
-                    <div className="bg-[#121217] border border-white/10 rounded-2xl p-6 flex flex-col justify-between h-full relative overflow-hidden group">
+                <div className="flex flex-col gap-4 h-full">
+                    <div className="bg-[#121217] border border-white/10 rounded-2xl p-6 flex flex-col justify-between flex-1 relative overflow-hidden group">
                         <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                         <div className="flex justify-between items-start mb-4">
                             <div className="p-2 bg-yellow-500/10 rounded-lg text-yellow-500 border border-yellow-500/20">
@@ -155,7 +155,7 @@ const Profile = () => {
                             <p className="text-xs text-zinc-500">Top 5% of contributors</p>
                         </div>
                     </div>
-                    <div className="bg-[#121217] border border-white/10 rounded-2xl p-6 flex flex-col justify-between h-full relative overflow-hidden group">
+                    <div className="bg-[#121217] border border-white/10 rounded-2xl p-6 flex flex-col justify-between flex-1 relative overflow-hidden group">
                         <div className="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                         <div className="flex justify-between items-start mb-4">
                             <div className="p-2 bg-blue-500/10 rounded-lg text-blue-500 border border-blue-500/20">
