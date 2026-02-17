@@ -3,12 +3,12 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
     ArrowLeft, Download, Star, FileText, Calendar, User, Lock, Globe,
-    Edit3, Trash2, Tag, BookOpen, Clock
+    Trash2, BookOpen
 } from 'lucide-react';
 import Button from '../components/ui/Button';
 import GlassCard from '../components/ui/GlassCard';
 import { useAuth } from '../context/AuthContext';
-import { fetchResource, fetchReviews, submitReview, deleteResource, downloadResource } from '../lib/api';
+import { fetchResource, fetchReviews, submitReview, deleteResource, getResourceDownloadUrl, fetchResourceTags, fetchProfile } from '../lib/api';
 
 const ResourceDetail = () => {
     const { id } = useParams();
@@ -17,6 +17,8 @@ const ResourceDetail = () => {
 
     const [resource, setResource] = useState(null);
     const [reviews, setReviews] = useState([]);
+    const [tags, setTags] = useState([]);
+    const [reviewProfiles, setReviewProfiles] = useState({});
     const [loading, setLoading] = useState(true);
     const [reviewRating, setReviewRating] = useState(0);
     const [hoverRating, setHoverRating] = useState(0);
@@ -31,12 +33,25 @@ const ResourceDetail = () => {
     const loadData = async () => {
         setLoading(true);
         try {
-            const [resData, revData] = await Promise.all([
+            const [resData, revData, tagData] = await Promise.all([
                 fetchResource(id),
                 fetchReviews(id),
+                fetchResourceTags(id),
             ]);
             setResource(resData.resource);
             setReviews(revData.reviews || []);
+            setTags(tagData || []);
+
+            // Fetch profiles for reviewers
+            const reviewerIds = [...new Set((revData.reviews || []).map(r => r.user_id))];
+            const profiles = {};
+            for (const uid of reviewerIds) {
+                try {
+                    const prof = await fetchProfile(uid);
+                    if (prof) profiles[uid] = prof;
+                } catch (e) { /* ignore */ }
+            }
+            setReviewProfiles(profiles);
 
             // If user already reviewed, prefill
             if (user) {
@@ -53,21 +68,18 @@ const ResourceDetail = () => {
         }
     };
 
-    const handleDownload = async () => {
-        try {
-            const data = await downloadResource(id);
-            window.open(data.file_url, '_blank');
-        } catch (err) {
-            console.error('Download failed:', err);
-        }
+    const handleDownload = () => {
+        if (!resource?.file_path) return;
+        const url = getResourceDownloadUrl(resource.file_path);
+        window.open(url, '_blank');
     };
 
     const handleReview = async (e) => {
         e.preventDefault();
-        if (!reviewRating) return;
+        if (!reviewRating || !user) return;
         setSubmittingReview(true);
         try {
-            await submitReview(id, { rating: reviewRating, comment: reviewComment });
+            await submitReview(id, user.id, { rating: reviewRating, comment: reviewComment });
             await loadData();
         } catch (err) {
             console.error('Review failed:', err);
@@ -80,7 +92,7 @@ const ResourceDetail = () => {
         if (!window.confirm('Are you sure you want to delete this resource?')) return;
         setDeleting(true);
         try {
-            await deleteResource(id);
+            await deleteResource(id, resource?.file_path);
             navigate('/browse');
         } catch (err) {
             console.error('Delete failed:', err);
@@ -88,7 +100,12 @@ const ResourceDetail = () => {
         }
     };
 
-    const isOwner = user && resource?.user_id === user.id;
+    const isOwner = user && resource?.uploader_id === user.id;
+
+    // Compute average rating from reviews
+    const avgRating = reviews.length > 0
+        ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
+        : '0.0';
 
     if (loading) {
         return (
@@ -107,8 +124,18 @@ const ResourceDetail = () => {
         );
     }
 
-    const tags = Array.isArray(resource.tags) ? resource.tags : [];
     const createdDate = new Date(resource.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    // Get reviewer displayname helper
+    const getReviewerName = (review) => {
+        const prof = reviewProfiles[review.user_id];
+        return prof?.full_name || 'Anonymous';
+    };
+
+    const getReviewerAvatar = (review) => {
+        const prof = reviewProfiles[review.user_id];
+        return prof?.avatar_url || null;
+    };
 
     return (
         <div className="min-h-screen pt-24 pb-12 px-6 max-w-5xl mx-auto">
@@ -128,13 +155,17 @@ const ResourceDetail = () => {
                     {/* Header */}
                     <div>
                         <div className="flex items-center gap-3 mb-3 flex-wrap">
-                            <span className="text-[11px] font-mono uppercase tracking-wider text-primary bg-primary/10 px-3 py-1 rounded-sm border border-primary/20">{resource.type}</span>
-                            {resource.privacy === 'private' ? (
+                            {resource.resource_type && (
+                                <span className="text-[11px] font-mono uppercase tracking-wider text-primary bg-primary/10 px-3 py-1 rounded-sm border border-primary/20">{resource.resource_type}</span>
+                            )}
+                            {resource.is_public === false ? (
                                 <span className="text-[11px] font-mono text-yellow-500 bg-yellow-500/10 px-2 py-1 rounded-sm border border-yellow-500/20 flex items-center gap-1"><Lock className="w-3 h-3" /> Private</span>
                             ) : (
                                 <span className="text-[11px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-sm border border-emerald-500/20 flex items-center gap-1"><Globe className="w-3 h-3" /> Public</span>
                             )}
-                            <span className="text-[11px] font-mono text-zinc-500">{resource.department} • {resource.semester}</span>
+                            {resource.semester && (
+                                <span className="text-[11px] font-mono text-zinc-500">Semester {resource.semester}</span>
+                            )}
                         </div>
 
                         <h1 className="text-3xl md:text-4xl font-display font-medium text-white mb-3">{resource.title}</h1>
@@ -148,15 +179,14 @@ const ResourceDetail = () => {
                     {/* Meta Info */}
                     <div className="flex flex-wrap gap-6 text-xs text-zinc-500 font-mono">
                         <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> {createdDate}</span>
-                        <span className="flex items-center gap-1.5"><Download className="w-3.5 h-3.5" /> {resource.downloads || 0} downloads</span>
-                        <span className="flex items-center gap-1.5"><Star className="w-3.5 h-3.5 text-yellow-500" /> {Number(resource.avg_rating || 0).toFixed(1)} ({resource.review_count || 0} reviews)</span>
-                        {resource.year_batch && <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> {resource.year_batch}</span>}
+                        <span className="flex items-center gap-1.5"><Star className="w-3.5 h-3.5 text-yellow-500" /> {avgRating} ({reviews.length} reviews)</span>
+                        {resource.year && <span className="flex items-center gap-1.5"><BookOpen className="w-3.5 h-3.5" /> {resource.year}</span>}
+                        {resource.college && <span className="flex items-center gap-1.5"><User className="w-3.5 h-3.5" /> {resource.college}</span>}
                     </div>
 
                     {/* Tags */}
                     {tags.length > 0 && (
                         <div className="flex flex-wrap gap-2">
-                            <Tag className="w-3.5 h-3.5 text-zinc-500 mt-0.5" />
                             {tags.map(tag => (
                                 <span key={tag} className="text-xs text-zinc-400 bg-white/5 px-2 py-1 rounded-sm border border-white/5">#{tag}</span>
                             ))}
@@ -227,15 +257,15 @@ const ResourceDetail = () => {
                                     >
                                         <div className="flex items-start justify-between mb-2">
                                             <div className="flex items-center gap-3">
-                                                {review.user_avatar ? (
-                                                    <img src={review.user_avatar} alt="" className="w-8 h-8 rounded-full object-cover border border-white/10" />
+                                                {getReviewerAvatar(review) ? (
+                                                    <img src={getReviewerAvatar(review)} alt="" className="w-8 h-8 rounded-full object-cover border border-white/10" />
                                                 ) : (
                                                     <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-xs text-white font-bold">
-                                                        {(review.user_name || 'A').charAt(0)}
+                                                        {getReviewerName(review).charAt(0)}
                                                     </div>
                                                 )}
                                                 <div>
-                                                    <p className="text-sm text-white font-medium">{review.user_name || 'Anonymous'}</p>
+                                                    <p className="text-sm text-white font-medium">{getReviewerName(review)}</p>
                                                     <p className="text-[10px] text-zinc-600">{new Date(review.created_at).toLocaleDateString()}</p>
                                                 </div>
                                             </div>
@@ -264,8 +294,8 @@ const ResourceDetail = () => {
                                 <FileText className="w-6 h-6" />
                             </div>
                             <div>
-                                <p className="text-sm text-white font-medium truncate max-w-[180px]">{resource.file_name}</p>
-                                <p className="text-xs text-zinc-500">{resource.file_size ? (resource.file_size / 1024 / 1024).toFixed(2) + ' MB' : 'Unknown size'}</p>
+                                <p className="text-sm text-white font-medium truncate max-w-[180px]">{resource.title}</p>
+                                <p className="text-xs text-zinc-500">{resource.resource_type || 'Document'}</p>
                             </div>
                         </div>
 
@@ -278,14 +308,14 @@ const ResourceDetail = () => {
                     <GlassCard className="space-y-3">
                         <h3 className="text-xs font-mono text-secondary uppercase tracking-widest">Rating</h3>
                         <div className="flex items-center gap-3">
-                            <span className="text-3xl font-bold text-white">{Number(resource.avg_rating || 0).toFixed(1)}</span>
+                            <span className="text-3xl font-bold text-white">{avgRating}</span>
                             <div>
                                 <div className="flex items-center gap-0.5 mb-1">
                                     {[1, 2, 3, 4, 5].map(s => (
-                                        <Star key={s} className={`w-4 h-4 ${s <= Math.round(resource.avg_rating || 0) ? 'text-yellow-500 fill-yellow-500' : 'text-zinc-700'}`} />
+                                        <Star key={s} className={`w-4 h-4 ${s <= Math.round(parseFloat(avgRating)) ? 'text-yellow-500 fill-yellow-500' : 'text-zinc-700'}`} />
                                     ))}
                                 </div>
-                                <p className="text-xs text-zinc-500">{resource.review_count || 0} reviews</p>
+                                <p className="text-xs text-zinc-500">{reviews.length} reviews</p>
                             </div>
                         </div>
                     </GlassCard>

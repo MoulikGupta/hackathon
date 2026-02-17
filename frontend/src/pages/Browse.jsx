@@ -8,18 +8,15 @@ const Browse = () => {
     const [resources, setResources] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const [selectedDept, setSelectedDept] = useState('All');
     const [selectedSem, setSelectedSem] = useState('All');
     const [selectedType, setSelectedType] = useState('All');
     const [sortBy, setSortBy] = useState('latest');
 
-    const departments = ['All', 'CSE', 'ECE', 'MECH', 'CIVIL', 'EEE', 'IT', 'Common'];
-    const semesters = ['All', '1st Sem', '2nd Sem', '3rd Sem', '4th Sem', '5th Sem', '6th Sem', '7th Sem', '8th Sem'];
+    const semesters = ['All', '1', '2', '3', '4', '5', '6', '7', '8'];
     const types = ['All', 'Notes', 'Question Paper', 'Solutions', 'Project Report', 'Study Material', 'Assignment', 'Lab Manual', 'Presentation'];
     const sortOptions = [
         { value: 'latest', label: 'Latest' },
-        { value: 'rating', label: 'Highest Rated' },
-        { value: 'popular', label: 'Most Popular' },
+        { value: 'oldest', label: 'Oldest' },
     ];
 
     const loadResources = useCallback(async () => {
@@ -27,9 +24,8 @@ const Browse = () => {
         try {
             const params = { sort: sortBy };
             if (searchTerm) params.search = searchTerm;
-            if (selectedDept !== 'All') params.department = selectedDept;
             if (selectedSem !== 'All') params.semester = selectedSem;
-            if (selectedType !== 'All') params.type = selectedType;
+            if (selectedType !== 'All') params.resource_type = selectedType;
 
             const data = await fetchResources(params);
             setResources(data.resources || []);
@@ -39,12 +35,14 @@ const Browse = () => {
         } finally {
             setLoading(false);
         }
-    }, [searchTerm, selectedDept, selectedSem, selectedType, sortBy]);
+    }, [searchTerm, selectedSem, selectedType, sortBy]);
 
     useEffect(() => {
         const debounce = setTimeout(loadResources, 300);
         return () => clearTimeout(debounce);
     }, [loadResources]);
+
+    const semesterLabel = (s) => s === 'All' ? 'All' : `Semester ${s}`;
 
     return (
         <div className="min-h-screen pt-24 pb-12 px-6 max-w-7xl mx-auto">
@@ -64,7 +62,7 @@ const Browse = () => {
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-secondary" />
                     <input
                         type="text"
-                        placeholder="Search by subject, title, or tag..."
+                        placeholder="Search by subject or title..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="w-full bg-[#121217] border border-white/10 rounded-full py-3 pl-12 pr-6 text-sm text-white focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all placeholder:text-zinc-600"
@@ -77,29 +75,16 @@ const Browse = () => {
 
                 {/* Sidebar Filters */}
                 <motion.aside initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="lg:col-span-1 space-y-8">
-                    {/* Department Filter */}
-                    <div>
-                        <h3 className="text-xs font-mono text-secondary uppercase tracking-widest mb-4 flex items-center gap-2">
-                            <Filter className="w-3 h-3" /> Department
-                        </h3>
-                        <div className="flex flex-wrap gap-2">
-                            {departments.map(dept => (
-                                <button key={dept} onClick={() => setSelectedDept(dept)}
-                                    className={`px-3 py-1.5 text-xs rounded-sm border transition-all cursor-pointer ${selectedDept === dept ? 'bg-primary/10 border-primary text-primary' : 'bg-white/5 border-white/5 text-zinc-400 hover:border-white/20'}`}>
-                                    {dept}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
                     {/* Semester Filter */}
                     <div>
-                        <h3 className="text-xs font-mono text-secondary uppercase tracking-widest mb-4">Semester</h3>
+                        <h3 className="text-xs font-mono text-secondary uppercase tracking-widest mb-4 flex items-center gap-2">
+                            <Filter className="w-3 h-3" /> Semester
+                        </h3>
                         <div className="space-y-1">
                             {semesters.map(sem => (
                                 <button key={sem} onClick={() => setSelectedSem(sem)}
                                     className={`w-full text-left px-3 py-2 text-sm rounded-sm transition-all flex justify-between items-center cursor-pointer ${selectedSem === sem ? 'text-white bg-white/5 border-l-2 border-primary' : 'text-zinc-500 hover:text-white hover:bg-white/5'}`}>
-                                    {sem}
+                                    {semesterLabel(sem)}
                                     {selectedSem === sem && <span className="w-1.5 h-1.5 rounded-full bg-primary" />}
                                 </button>
                             ))}

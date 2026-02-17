@@ -2,12 +2,11 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload as UploadIcon, X, FileText, CheckCircle, AlertCircle, Lock, Globe, Tag } from 'lucide-react';
 import Button from '../components/ui/Button';
-import GlassCard from '../components/ui/GlassCard';
-import { uploadResource } from '../lib/api';
+import { uploadResource, addTagsToResource } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 
 const Upload = () => {
-    const { user } = useAuth();
+    const { user, profile } = useAuth();
     const [dragActive, setDragActive] = useState(false);
     const [file, setFile] = useState(null);
     const [uploading, setUploading] = useState(false);
@@ -17,13 +16,12 @@ const Upload = () => {
     const [formData, setFormData] = useState({
         title: '',
         subject: '',
-        department: 'CSE',
-        semester: '1st Sem',
-        type: 'Notes',
+        semester: '1',
+        resource_type: 'Notes',
+        year: new Date().getFullYear().toString(),
         description: '',
         tags: '',
-        year_batch: '2024-25',
-        privacy: 'public',
+        is_public: true,
     });
 
     const handleDrag = (e) => {
@@ -53,31 +51,34 @@ const Upload = () => {
         setError('');
 
         try {
-            const fd = new FormData();
-            fd.append('file', file);
-            fd.append('title', formData.title);
-            fd.append('subject', formData.subject);
-            fd.append('department', formData.department);
-            fd.append('semester', formData.semester);
-            fd.append('type', formData.type);
-            fd.append('description', formData.description);
-            fd.append('year_batch', formData.year_batch);
-            fd.append('privacy', formData.privacy);
-            // Send tags as JSON array
-            const tagsArray = formData.tags.split(',').map(t => t.trim()).filter(Boolean);
-            fd.append('tags', JSON.stringify(tagsArray));
-            // College from user metadata
-            fd.append('college', user?.user_metadata?.college || '');
+            const resource = await uploadResource({
+                file,
+                title: formData.title,
+                subject: formData.subject,
+                semester: formData.semester,
+                resource_type: formData.resource_type,
+                year: formData.year,
+                description: formData.description,
+                is_public: formData.is_public,
+                college: profile?.college || '',
+                userId: user.id,
+            });
 
-            await uploadResource(fd);
+            // Handle tags
+            const tagsArray = formData.tags.split(',').map(t => t.trim()).filter(Boolean);
+            if (tagsArray.length > 0 && resource?.id) {
+                await addTagsToResource(resource.id, tagsArray);
+            }
+
             setSuccess(true);
 
             setTimeout(() => {
                 setSuccess(false);
                 setFile(null);
                 setFormData({
-                    title: '', subject: '', department: 'CSE', semester: '1st Sem',
-                    type: 'Notes', description: '', tags: '', year_batch: '2024-25', privacy: 'public',
+                    title: '', subject: '', semester: '1',
+                    resource_type: 'Notes', description: '', tags: '',
+                    year: new Date().getFullYear().toString(), is_public: true,
                 });
             }, 3000);
         } catch (err) {
@@ -130,25 +131,25 @@ const Upload = () => {
                         </AnimatePresence>
                     </div>
 
-                    {/* Privacy Toggle */}
+                    {/* Visibility Toggle */}
                     <div className="flex gap-3">
                         <button
                             type="button"
-                            onClick={() => setFormData(prev => ({ ...prev, privacy: 'public' }))}
-                            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border text-sm font-mono transition-all cursor-pointer ${formData.privacy === 'public' ? 'bg-primary/10 border-primary text-primary' : 'bg-white/5 border-white/10 text-zinc-500 hover:border-white/20'}`}
+                            onClick={() => setFormData(prev => ({ ...prev, is_public: true }))}
+                            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border text-sm font-mono transition-all cursor-pointer ${formData.is_public ? 'bg-primary/10 border-primary text-primary' : 'bg-white/5 border-white/10 text-zinc-500 hover:border-white/20'}`}
                         >
                             <Globe className="w-4 h-4" /> Public
                         </button>
                         <button
                             type="button"
-                            onClick={() => setFormData(prev => ({ ...prev, privacy: 'private' }))}
-                            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border text-sm font-mono transition-all cursor-pointer ${formData.privacy === 'private' ? 'bg-yellow-500/10 border-yellow-500 text-yellow-500' : 'bg-white/5 border-white/10 text-zinc-500 hover:border-white/20'}`}
+                            onClick={() => setFormData(prev => ({ ...prev, is_public: false }))}
+                            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border text-sm font-mono transition-all cursor-pointer ${!formData.is_public ? 'bg-yellow-500/10 border-yellow-500 text-yellow-500' : 'bg-white/5 border-white/10 text-zinc-500 hover:border-white/20'}`}
                         >
                             <Lock className="w-4 h-4" /> Private
                         </button>
                     </div>
 
-                    <GlassCard className="space-y-3">
+                    <div className="bg-white/[0.02] border border-white/5 rounded-lg p-5 space-y-3">
                         <h3 className="text-xs font-mono text-secondary uppercase tracking-widest flex items-center gap-2"><AlertCircle className="w-3 h-3 text-primary" /> Guidelines</h3>
                         <ul className="text-xs text-zinc-400 space-y-2 list-disc pl-4">
                             <li>Ensure content is clearly visible and readable.</li>
@@ -156,7 +157,7 @@ const Upload = () => {
                             <li><strong>Public</strong> resources are visible to all users.</li>
                             <li><strong>Private</strong> resources are only visible to your college.</li>
                         </ul>
-                    </GlassCard>
+                    </div>
                 </div>
 
                 {/* Right Col: Metadata Form */}
@@ -173,32 +174,24 @@ const Upload = () => {
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
-                            <label className={labelClass}>Department</label>
-                            <select name="department" value={formData.department} onChange={handleChange} className={inputClass + ' appearance-none'}>
-                                {['CSE', 'ECE', 'MECH', 'CIVIL', 'EEE', 'IT', 'Common'].map(d => <option key={d} value={d}>{d}</option>)}
+                            <label className={labelClass}>Semester</label>
+                            <select name="semester" value={formData.semester} onChange={handleChange} className={inputClass + ' appearance-none'}>
+                                {['1', '2', '3', '4', '5', '6', '7', '8'].map(s => <option key={s} value={s}>Semester {s}</option>)}
                             </select>
                         </div>
                         <div className="space-y-1">
-                            <label className={labelClass}>Semester</label>
-                            <select name="semester" value={formData.semester} onChange={handleChange} className={inputClass + ' appearance-none'}>
-                                {['1st Sem', '2nd Sem', '3rd Sem', '4th Sem', '5th Sem', '6th Sem', '7th Sem', '8th Sem'].map(s => <option key={s} value={s}>{s}</option>)}
+                            <label className={labelClass}>Resource Type</label>
+                            <select name="resource_type" value={formData.resource_type} onChange={handleChange} className={inputClass + ' appearance-none'}>
+                                {['Notes', 'Question Paper', 'Solutions', 'Project Report', 'Study Material', 'Assignment', 'Lab Manual', 'Presentation'].map(t => <option key={t} value={t}>{t}</option>)}
                             </select>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                            <label className={labelClass}>Resource Type</label>
-                            <select name="type" value={formData.type} onChange={handleChange} className={inputClass + ' appearance-none'}>
-                                {['Notes', 'Question Paper', 'Solutions', 'Project Report', 'Study Material', 'Assignment', 'Lab Manual', 'Presentation'].map(t => <option key={t} value={t}>{t}</option>)}
-                            </select>
-                        </div>
-                        <div className="space-y-1">
-                            <label className={labelClass}>Year / Batch</label>
-                            <select name="year_batch" value={formData.year_batch} onChange={handleChange} className={inputClass + ' appearance-none'}>
-                                {['2024-25', '2023-24', '2022-23', '2021-22', '2020-21'].map(y => <option key={y} value={y}>{y}</option>)}
-                            </select>
-                        </div>
+                    <div className="space-y-1">
+                        <label className={labelClass}>Year</label>
+                        <select name="year" value={formData.year} onChange={handleChange} className={inputClass + ' appearance-none'}>
+                            {[2026, 2025, 2024, 2023, 2022, 2021, 2020].map(y => <option key={y} value={y}>{y}</option>)}
+                        </select>
                     </div>
 
                     <div className="space-y-1">
