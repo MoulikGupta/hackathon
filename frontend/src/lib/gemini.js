@@ -10,8 +10,8 @@ export async function getGeminiResponse(prompt, history = []) {
 
     try {
         const genAI = new GoogleGenerativeAI(API_KEY);
-        // Fallback to stable model if preview is failing
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        // Using user-requested model
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
         // Filter history: SDK requires the first message to be from 'user'
         // We also need to map our app's role names to SDK's role names if they differ
