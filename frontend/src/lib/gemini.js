@@ -10,8 +10,8 @@ export async function getGeminiResponse(prompt, history = []) {
 
     try {
         const genAI = new GoogleGenerativeAI(API_KEY);
-        // using the preview model for Flash Lite 2.0
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite-preview-02-05" });
+        // Fallback to stable model if preview is failing
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         // Filter history: SDK requires the first message to be from 'user'
         // We also need to map our app's role names to SDK's role names if they differ
@@ -36,6 +36,7 @@ export async function getGeminiResponse(prompt, history = []) {
         return response.text();
     } catch (error) {
         console.error("Error generating AI response:", error);
-        return "I'm having trouble connecting to my brain right now. Please try again later.";
+        // Return the actual error message for debugging
+        return `Error: ${error.message || "Something went wrong"}. Please try again.`;
     }
 }
