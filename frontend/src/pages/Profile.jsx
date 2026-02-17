@@ -1,13 +1,17 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { User, Settings, Medal, Download, Upload, Star } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { User, Settings, Medal, Download, Upload, Star, Plus, Trash2 } from 'lucide-react';
 import Button from '../components/ui/Button';
 import ResourceCard from '../components/ResourceCard';
-import { MOCK_RESOURCES } from '../data/mockData';
 import { useAuth } from '../context/AuthContext';
+import { fetchResources, deleteResource } from '../lib/api';
 
 const Profile = () => {
     const { user } = useAuth();
+    const navigate = useNavigate();
+    const [myResources, setMyResources] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     // Build profile from real auth data
     const profile = {
@@ -15,14 +19,32 @@ const Profile = () => {
         email: user?.email || '',
         avatar_url: user?.user_metadata?.avatar_url || null,
         role: "CSE • Student",
-        bio: "Exploring the depths of Computer Science. Always learning.",
-        stats: {
-            karma: 1250,
-            uploads: 15,
-            downloads: 450,
-            avgRating: 4.8
+    };
+
+    useEffect(() => {
+        if (user) loadMyResources();
+    }, [user]);
+
+    const loadMyResources = async () => {
+        setLoading(true);
+        try {
+            const data = await fetchResources({ user_id: user.id });
+            setMyResources(data.resources || []);
+        } catch (err) {
+            console.error('Failed to load resources:', err);
+            setMyResources([]);
+        } finally {
+            setLoading(false);
         }
     };
+
+    // Compute stats from real data
+    const totalUploads = myResources.length;
+    const totalDownloads = myResources.reduce((sum, r) => sum + (r.downloads || 0), 0);
+    const avgRating = myResources.length > 0
+        ? (myResources.reduce((sum, r) => sum + (parseFloat(r.avg_rating) || 0), 0) / myResources.length).toFixed(1)
+        : '0.0';
+    const karma = totalUploads * 50 + totalDownloads;
 
     // Get initials for fallback avatar
     const getInitials = () => {
@@ -33,17 +55,21 @@ const Profile = () => {
             : name.substring(0, 2).toUpperCase();
     };
 
-    const userUploads = MOCK_RESOURCES.slice(0, 3);
+    const handleDelete = async (id) => {
+        if (!window.confirm('Delete this resource?')) return;
+        try {
+            await deleteResource(id);
+            setMyResources(prev => prev.filter(r => r.id !== id));
+        } catch (err) {
+            console.error('Delete failed:', err);
+        }
+    };
 
     return (
         <div className="min-h-screen pt-24 px-6 max-w-6xl mx-auto pb-12">
 
             {/* Header Section */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="relative mb-12"
-            >
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative mb-12">
                 {/* Banner */}
                 <div className="h-48 w-full bg-gradient-to-r from-zinc-900 to-[#121217] rounded-xl border border-white/5 overflow-hidden">
                     <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5"></div>
@@ -54,11 +80,7 @@ const Profile = () => {
                 <div className="px-6 relative flex flex-col md:flex-row items-start md:items-end -mt-16 gap-6">
                     <div className="w-32 h-32 rounded-xl border-4 border-[#0A0A0F] shadow-xl flex items-center justify-center text-4xl font-bold text-white relative z-10 overflow-hidden">
                         {profile.avatar_url ? (
-                            <img
-                                src={profile.avatar_url}
-                                alt={profile.name}
-                                className="w-full h-full object-cover"
-                            />
+                            <img src={profile.avatar_url} alt={profile.name} className="w-full h-full object-cover" />
                         ) : (
                             <>
                                 <div className="absolute inset-0 bg-gradient-to-br from-zinc-800 to-black"></div>
@@ -77,11 +99,9 @@ const Profile = () => {
                                 <p className="text-secondary font-mono text-sm">{profile.role}</p>
                                 <p className="text-zinc-500 text-sm mt-1 max-w-md">{profile.email}</p>
                             </div>
-
-                            <div className="flex gap-3">
-                                <Button variant="ghost" className="h-10 px-4 text-xs">Edit Profile</Button>
-                                <Button variant="primary" className="h-10 px-4 text-xs">Share Profile</Button>
-                            </div>
+                            <Button variant="primary" className="h-10 px-4 text-xs" onClick={() => navigate('/upload')}>
+                                <Plus className="w-3.5 h-3.5 mr-1" /> Upload Resource
+                            </Button>
                         </div>
                     </div>
                 </div>
@@ -90,10 +110,10 @@ const Profile = () => {
             {/* Stats Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
                 {[
-                    { label: 'Karma Points', value: profile.stats.karma, icon: Star, color: 'text-yellow-500' },
-                    { label: 'Total Uploads', value: profile.stats.uploads, icon: Upload, color: 'text-blue-400' },
-                    { label: 'Downloads Received', value: profile.stats.downloads, icon: Download, color: 'text-green-400' },
-                    { label: 'Avg Rating', value: profile.stats.avgRating, icon: Medal, color: 'text-purple-400' }
+                    { label: 'Karma Points', value: karma, icon: Star, color: 'text-yellow-500' },
+                    { label: 'Total Uploads', value: totalUploads, icon: Upload, color: 'text-blue-400' },
+                    { label: 'Downloads Received', value: totalDownloads, icon: Download, color: 'text-green-400' },
+                    { label: 'Avg Rating', value: avgRating, icon: Medal, color: 'text-purple-400' }
                 ].map((stat, i) => (
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -111,22 +131,33 @@ const Profile = () => {
                 ))}
             </div>
 
-            {/* Content Tabs */}
+            {/* My Uploads */}
             <div className="mb-8 border-b border-white/5">
                 <div className="flex gap-8">
                     <button className="pb-4 text-sm font-medium text-white border-b-2 border-primary">My Uploads</button>
-                    <button className="pb-4 text-sm font-medium text-secondary hover:text-white transition-colors">Bookmarks</button>
-                    <button className="pb-4 text-sm font-medium text-secondary hover:text-white transition-colors">History</button>
                 </div>
             </div>
 
-            {/* User Uploads Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {userUploads.map((resource, i) => (
-                    <ResourceCard key={i} resource={resource} index={i} />
-                ))}
-            </div>
-
+            {loading ? (
+                <div className="flex justify-center py-16">
+                    <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+                </div>
+            ) : myResources.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {myResources.map((resource, i) => (
+                        <ResourceCard key={resource.id} resource={resource} index={i} />
+                    ))}
+                </div>
+            ) : (
+                <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed border-white/10 rounded-lg">
+                    <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4">
+                        <Upload className="w-6 h-6 text-zinc-600" />
+                    </div>
+                    <h3 className="text-white font-medium mb-1">No uploads yet</h3>
+                    <p className="text-zinc-500 text-sm mb-4">Start contributing to the community!</p>
+                    <Button onClick={() => navigate('/upload')}>Upload Your First Resource</Button>
+                </div>
+            )}
         </div>
     );
 };
