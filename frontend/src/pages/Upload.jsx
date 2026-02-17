@@ -58,7 +58,7 @@ const Upload = () => {
 
         setUploading(true);
         try {
-            await uploadResource(file, { ...formData, user_id: user.id });
+            await uploadResource({ file, ...formData, userId: user.id });
             setSuccess(true);
             setTimeout(() => navigate('/profile'), 2000);
         } catch (err) {
