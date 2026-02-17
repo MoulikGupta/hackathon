@@ -80,10 +80,10 @@ const ScrollSequence = () => {
             // SAFETY CHECK: Only draw if image is loaded and valid
             if (!img || !img.complete || img.naturalWidth === 0) return;
 
-            // Object-fit: contain logic
+            // Object-fit: cover logic with slight zoom to crop watermark
             const hRatio = canvas.width / img.width;
             const vRatio = canvas.height / img.height;
-            const ratio = Math.min(hRatio, vRatio); // Contain
+            const ratio = Math.max(hRatio, vRatio) * 1.1; // 1.1x Zoom to crop edges
 
             const centerShift_x = (canvas.width - img.width * ratio) / 2;
             const centerShift_y = (canvas.height - img.height * ratio) / 2;

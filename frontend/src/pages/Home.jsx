@@ -3,15 +3,11 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Shield, Key, Fingerprint, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Button from '../components/ui/Button';
-import HeroScroll from '../components/scrollytelling/HeroScroll'; // This was previously HeroScroll, but checking the file it seems I am using ScrollSequence inside HeroScroll? 
-// Wait, the previous replacement in step 638 replaced Hero with `HeroScroll`.
-// Let's check `HeroScroll.jsx` content first. I might have confused myself. 
-// If `HeroScroll` uses `ScrollSequence`, I should wrap it there. 
-// Step 638 Diff shows: `import HeroScroll from '../components/scrollytelling/HeroScroll';` and usage `<HeroScroll />`.
-// So I should check `HeroScroll.jsx` to see if it instantiates `ScrollSequence`.
+import HeroScroll from '../components/scrollytelling/HeroScroll';
+import FeatureScroll from '../components/scrollytelling/FeatureScroll';
 
 
-/* ───────────── FEATURES (KZero-style horizontal cards) ───────────── */
+/* ───────────── FEATURES (StudySync-style horizontal cards) ───────────── */
 const features = [
     {
         icon: Shield,
@@ -165,7 +161,7 @@ const Home = () => (
         <ErrorBoundary>
             <HeroScroll />
         </ErrorBoundary>
-        <Features />
+        <FeatureScroll />
         <Statistics />
         <CTASection />
     </div>

@@ -7,7 +7,7 @@ require('dotenv').config();
 const supabase = require('./config/supabaseClient');
 
 async function setupDatabase() {
-    console.log('🔧 KZero Inspire — Database Setup\n');
+    console.log('🔧 StudySync Inspire — Database Setup\n');
 
     const sql = `
 -- ============================================

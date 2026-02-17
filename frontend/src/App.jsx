@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
@@ -8,41 +8,32 @@ import Leaderboard from './pages/Leaderboard';
 import Profile from './pages/Profile';
 import Login from './pages/Login';
 import ResourceDetail from './pages/ResourceDetail';
-import LoadingScreen from './components/LoadingScreen';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
-  const [isLoading, setIsLoading] = useState(true);
-
   return (
     <Router>
-      <div className="min-h-screen bg-black text-white font-sans kzero-aura">
-        {isLoading ? (
-          <LoadingScreen onComplete={() => setIsLoading(false)} />
-        ) : (
-          <>
-            <Navbar />
-            <main>
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/browse" element={<Browse />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/leaderboard" element={<Leaderboard />} />
-                <Route path="/resource/:id" element={<ResourceDetail />} />
-                <Route path="/upload" element={
-                  <ProtectedRoute>
-                    <Upload />
-                  </ProtectedRoute>
-                } />
-                <Route path="/profile" element={
-                  <ProtectedRoute>
-                    <Profile />
-                  </ProtectedRoute>
-                } />
-              </Routes>
-            </main>
-          </>
-        )}
+      <div className="min-h-screen bg-black text-white font-sans studysync-aura">
+        <Navbar />
+        <main>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/browse" element={<Browse />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/leaderboard" element={<Leaderboard />} />
+            <Route path="/resource/:id" element={<ResourceDetail />} />
+            <Route path="/upload" element={
+              <ProtectedRoute>
+                <Upload />
+              </ProtectedRoute>
+            } />
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            } />
+          </Routes>
+        </main>
       </div>
     </Router>
   );

@@ -14,8 +14,8 @@ const Navbar = () => {
 
     useEffect(() => {
         const handleScroll = () => {
-            // Show navbar only after scrolling past the main hero view (e.g. 80% viewport)
-            setIsVisible(window.scrollY > window.innerHeight * 0.8);
+            // Show navbar only after scrolling past the "Built for Students" phase (approx 50% of 500vh hero)
+            setIsVisible(window.scrollY > window.innerHeight * 2.5);
         };
         handleScroll(); // Check on mount
         window.addEventListener('scroll', handleScroll);
@@ -49,7 +49,7 @@ const Navbar = () => {
 
     return (
         <>
-            {/* Floating Pill Navbar — inspired by KZero */}
+            {/* Floating Pill Navbar — inspired by StudySync */}
             <motion.nav
                 initial={{ y: -100, opacity: 0 }}
                 animate={{ y: isVisible ? 0 : -100, opacity: isVisible ? 1 : 0 }}
@@ -66,10 +66,10 @@ const Navbar = () => {
                     <NavLink to="/" className="flex items-center gap-2.5 group">
                         <div className="flex items-center gap-1">
                             <div className="w-7 h-7 bg-primary flex items-center justify-center">
-                                <span className="text-black font-bold text-sm font-mono">K</span>
+                                <span className="text-black font-bold text-sm font-mono">S</span>
                             </div>
                             <div className="w-7 h-7 border border-white/20 flex items-center justify-center group-hover:border-primary/50 transition-colors">
-                                <span className="text-white font-bold text-sm font-mono">Z</span>
+                                <span className="text-white font-bold text-sm font-mono">S</span>
                             </div>
                         </div>
                         <span className="font-mono text-sm tracking-wider text-white/80 hidden sm:inline">

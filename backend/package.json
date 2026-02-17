@@ -1,7 +1,7 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "This directory will contain the backend service for the KZero Inspire platform.",
+  "description": "This directory will contain the backend service for the StudySync Inspire platform.",
   "main": "index.js",
   "scripts": {
     "start": "node server.js",

@@ -30,20 +30,20 @@
 
 @layer components {
 
-  /* KZero Glass Panel */
+  /* StudySync Glass Panel */
   .glass-panel {
     @apply backdrop-blur-xl border border-white/10;
     background: rgba(255, 255, 255, 0.03);
   }
 
-  /* KZero Tag / Badge */
-  .kzero-tag {
+  /* StudySync Tag / Badge */
+  .studysync-tag {
     @apply inline-flex items-center gap-1.5 px-3 py-1 text-xs font-mono uppercase tracking-widest;
     @apply text-primary border border-primary/30 bg-primary/5;
   }
 
-  /* Blue edge aura (KZero signature) */
-  .kzero-aura {
+  /* Blue edge aura (StudySync signature) */
+  .studysync-aura {
     box-shadow:
       inset 0 0 120px rgba(0, 82, 255, 0.06),
       inset 0 0 300px rgba(0, 82, 255, 0.03);
